@@ -154,6 +154,21 @@ export const auditLogs = [
   { id: 8, timestamp: '13:15:44', user: 'system', action: 'Threshold Breach', resource: 'Dragon Steel GPR > 70', status: 'warning', ip: '10.0.0.1' },
 ];
 
+// ── Smart Alerts Data ───────────────────────────────────────────
+export const alerts = [
+  { id: 1, severity: 'critical', type: 'Risk Score', title: 'Shenzhen Electronics exceeds critical threshold', time: '2 min ago', description: 'Composite risk score surged to 82/100 driven by geopolitical instability and declining on-time delivery rates. Immediate vendor review recommended.' },
+  { id: 2, severity: 'critical', type: 'Geopolitical', title: 'Taiwan Strait military escalation detected', time: '15 min ago', description: 'Intelligence feeds report naval exercises near Taiwan. Apex Manufacturing and regional semiconductor suppliers face elevated disruption risk.' },
+  { id: 3, severity: 'critical', type: 'Supply Chain', title: 'Dragon Steel delivery rate below 60%', time: '1 hr ago', description: 'On-time delivery has dropped to 58% over the past 30 days. Lead times have increased by 35%. Consider activating backup supplier protocols.' },
+  { id: 4, severity: 'high', type: 'Financial', title: 'Lagos Polymers financial stability declining', time: '3 hr ago', description: 'Financial stability index dropped to 38/100. Credit rating downgrade expected. Contract exposure: $0.9M.' },
+  { id: 5, severity: 'high', type: 'Compliance', title: 'Cairo Textiles audit score below threshold', time: '5 hr ago', description: 'Latest compliance audit returned a score of 50/100, falling below the minimum acceptable threshold of 60. Remediation plan required within 14 days.' },
+  { id: 6, severity: 'high', type: 'Logistics', title: 'Red Sea route delays impacting 4 vendors', time: '6 hr ago', description: 'Ongoing Houthi disruptions in the Bab el-Mandeb strait are adding 8-12 days to shipping routes for Middle East and Asia Pacific vendors.' },
+  { id: 7, severity: 'moderate', type: 'Capacity', title: 'Dragon Steel capacity utilization at 95%', time: '8 hr ago', description: 'Operating near maximum capacity increases risk of quality degradation and inability to absorb demand spikes. Monitor closely.' },
+  { id: 8, severity: 'moderate', type: 'Quality', title: 'Apex Manufacturing defect rate trending up', time: '12 hr ago', description: 'Defect rate PPM has increased 15% over the past quarter from 3,600 to 4,200. Field failure rate also trending upward.' },
+  { id: 9, severity: 'moderate', type: 'Logistics', title: 'Istanbul Metals lead time exceeding SLA', time: '1 day ago', description: 'Average lead time has increased to 16 days against an SLA target of 12 days. Shipment accuracy also declining.' },
+  { id: 10, severity: 'low', type: 'Information', title: 'Nordic Supply Chain contract renewal due', time: '2 days ago', description: 'Contract with Nordic Supply Chain (Sweden) is due for renewal in 45 days. Current performance metrics are excellent — low risk vendor.' },
+  { id: 11, severity: 'low', type: 'System', title: 'Weight engine profile updated to Balanced', time: '3 days ago', description: 'Risk analyst switched the active scoring profile from Crisis Response back to Balanced. All vendor scores have been recalculated.' },
+];
+
 // ── Scoring Utilities ───────────────────────────────────────────
 export function normalizeParam(key, rawValue) {
   const cfg = parameterConfig[key];

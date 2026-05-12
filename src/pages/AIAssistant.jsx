@@ -1,154 +1,106 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import { useRiskEngine } from '../context/RiskEngine';
 import './AIAssistant.css';
 
-const suggestedQueries = [
-  'Why is Shenzhen Electronics at critical risk?',
-  'Suggest alternative suppliers for Apex Manufacturing',
-  'What is the predicted disruption timeline for Q2?',
-  'Compare Nordic Supply Chain vs EuroComponents',
-  'Show cascade impact if Dragon Steel fails',
-];
-
-const initialMessages = [
-  {
-    role: 'assistant',
-    content: 'Hello! I\'m your VendorIQ AI Assistant. I can help you analyze vendor risks, explain predictions, suggest alternatives, and run scenario analyses. What would you like to know?',
-    time: '11:20 AM',
-  },
+const presetQueries = [
+  'Why did Shenzhen Electronics become critical?',
+  'Compare top 3 vendors by weighted risk',
+  'Explain how geopolitical weight affects rankings',
+  'What happens if I increase delivery weight to 30%?',
+  'Summarize current active event impacts',
+  'Recommend mitigation for high-risk vendors',
 ];
 
 export default function AIAssistant() {
-  const [messages, setMessages] = useState(initialMessages);
+  const { scoredVendors, weights, activeEvents, stats } = useRiskEngine();
+  const [messages, setMessages] = useState([
+    { role: 'assistant', text: `Welcome to the Procurement Decision Intelligence Assistant. I can explain scoring logic, summarize event impacts, recommend mitigation strategies, and compare vendor scenarios.\n\nCurrently monitoring ${stats.total} vendors with ${stats.critical} critical, ${stats.high} high risk. ${activeEvents.length} active disruption event${activeEvents.length !== 1 ? 's' : ''}.` },
+  ]);
   const [input, setInput] = useState('');
-  const [typing, setTyping] = useState(false);
-  const feedRef = useRef(null);
 
-  useEffect(() => {
-    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
-  }, [messages]);
+  const generateResponse = (query) => {
+    const q = query.toLowerCase();
+    if (q.includes('why') && q.includes('critical')) {
+      const critical = scoredVendors.filter(v => v.riskBand === 'Critical');
+      if (critical.length === 0) return 'No vendors are currently in critical status under the active weight configuration.';
+      const v = critical[0];
+      const topFactors = Object.entries(v.contributions).sort(([,a],[,b]) => b.contribution - a.contribution).slice(0, 3);
+      return `**${v.name}** has a weighted risk score of **${v.riskScore}/100** (${v.riskBand}).\n\n**Top contributing factors:**\n${topFactors.map(([k, c]) => `• ${k.replace(/_/g, ' ')}: normalized ${c.normalized}/100 × weight ${c.weight}% = **${c.contribution.toFixed(1)} contribution**`).join('\n')}\n\n${activeEvents.length > 0 ? `⚡ Active disruptions are modifying raw parameters for ${v.region} region vendors.` : 'No active events affecting this vendor currently.'}\n\nThis score is calculated using rule-based heuristic logic, not opaque ML predictions.`;
+    }
+    if (q.includes('compare') || q.includes('top')) {
+      const top3 = scoredVendors.slice(0, 3);
+      return `**Top 3 Highest Risk Vendors:**\n\n${top3.map((v, i) => `${i + 1}. **${v.name}** — Score: ${v.riskScore} (${v.riskBand})\n   Region: ${v.region} | Tier: ${v.tier}`).join('\n\n')}\n\nRankings are dynamically computed using the current weight profile. Adjusting weights in the Weight Engine will reorder these instantly.`;
+    }
+    if (q.includes('weight') || q.includes('geopolitical')) {
+      const topWeights = Object.entries(weights).sort(([,a],[,b]) => b - a).slice(0, 5);
+      return `**Current Weight Configuration:**\n\n${topWeights.map(([k, v]) => `• ${k.replace(/_/g, ' ')}: **${v}%**`).join('\n')}\n\nGeopolitical Risk is currently weighted at **${weights.GPR_Score}%**. Increasing this value will escalate vendors in high-GPR regions (Asia Pacific, Middle East, Africa) while having minimal effect on North American and European vendors.\n\nTo modify weights, visit the **Weight Engine** page.`;
+    }
+    if (q.includes('event') || q.includes('disruption') || q.includes('impact')) {
+      if (activeEvents.length === 0) return 'No active disruption events. Visit the **Global Events** page to inject scenarios and observe their impact on vendor risk scores.';
+      return `**Active Disruptions (${activeEvents.length}):**\n\n${activeEvents.map(e => `• **${e.name}** (${e.severity}) — ${e.region}\n  Impacts: ${Object.entries(e.impacts).map(([p, m]) => `${p.replace(/_/g, ' ')} ${m > 1 ? '+' : ''}${Math.round((m - 1) * 100)}%`).join(', ')}`).join('\n\n')}\n\nThese events are modifying raw vendor parameters in real-time, causing ${stats.critical} vendors to reach critical status.`;
+    }
+    if (q.includes('mitigation') || q.includes('recommend')) {
+      const critical = scoredVendors.filter(v => v.riskBand === 'Critical').slice(0, 3);
+      return `**Mitigation Recommendations:**\n\n${critical.map(v => `• **${v.name}** (Score: ${v.riskScore})\n  → Diversify sourcing from ${v.region}\n  → Increase safety stock for ${v.category} materials\n  → Activate backup supplier agreements`).join('\n\n')}\n\n**General Strategies:**\n• Switch to Crisis Response weight profile for conservative scoring\n• Monitor Global Events dashboard for emerging disruptions\n• Run simulation scenarios in the Digital Twin lab`;
+    }
+    return `Based on the current analytical configuration:\n\n• **${stats.total} vendors** monitored across ${Object.keys(scoredVendors.reduce((a, v) => ({...a, [v.region]: true}), {})).length} regions\n• **${stats.critical} critical**, ${stats.high} high, ${stats.moderate} moderate, ${stats.low} low risk\n• **${activeEvents.length} active events** affecting calculations\n• Global Risk Index: **${stats.avg}/100**\n\nAsk me about specific vendors, weight configurations, event impacts, or mitigation strategies.`;
+  };
 
-  const sendMessage = (text) => {
-    const msg = text || input;
-    if (!msg.trim()) return;
-    setMessages(prev => [...prev, { role: 'user', content: msg, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
-    setInput('');
-    setTyping(true);
-
+  const handleSend = (text) => {
+    const query = text || input;
+    if (!query.trim()) return;
+    setMessages(prev => [...prev, { role: 'user', text: query }]);
     setTimeout(() => {
-      const responses = {
-        'Why is Shenzhen Electronics at critical risk?': `**Shenzhen Electronics (Risk: 91/100)**\n\nThe critical risk assessment is driven by multiple converging factors:\n\n📊 **Top Contributing Factors:**\n• **Financial Health: 32%** — Liquidity ratio at 0.6x, well below the 1.0x safety threshold\n• **Delivery Reliability: 55%** — 45% of shipments delayed in Q1, the worst among Tier 1 suppliers\n• **Defect Rate: 5.7%** — Nearly 3x the acceptable threshold of 2%\n• **Geopolitical Risk** — Located in high-tension trade zone with active tariff disputes\n\n⚡ **Cascade Impact:** 12 downstream nodes affected. If Shenzhen fails, estimated $2.4M revenue impact within 30 days.\n\n💡 **Recommendation:** Activate contingency sourcing from Nordic Supply Chain (risk: 42) which can absorb 60% of Shenzhen's volume.`,
-
-        'Suggest alternative suppliers for Apex Manufacturing': `**Alternative Supplier Analysis for Apex Manufacturing**\n\nBased on capability matching, capacity analysis, and risk profiling:\n\n🏆 **Top 3 Alternatives:**\n\n1. **Nordic Supply Chain** (Risk: 42)\n   - Delivery: 88% | Financial: 76% | ESG: A\n   - Capacity overlap: 60% | Lead time: +2 days\n   - ✅ Recommended — Best risk-reward ratio\n\n2. **EuroComponents GmbH** (Risk: 35)\n   - Delivery: 92% | Financial: 82% | ESG: A\n   - Capacity overlap: 40% | Lead time: +3 days\n   - ✅ Low risk, but limited capacity\n\n3. **TechFusion Inc.** (Risk: 19)\n   - Delivery: 97% | Financial: 94% | ESG: A+\n   - Capacity overlap: 30% | Lead time: +1 day\n   - ✅ Excellent metrics, premium pricing\n\n📈 Combined coverage: **130%** of Apex's volume. Switching cost estimated at $340K.`,
-
-        default: `I've analyzed your query. Here's what I found:\n\n📊 Based on the current risk model (v3.2, 94% confidence), the vendor landscape shows **${Math.floor(Math.random() * 5 + 3)} vendors** requiring attention this week.\n\n**Key Insights:**\n• Supply chain health index is trending ${Math.random() > 0.5 ? 'downward' : 'stable'}\n• ${Math.floor(Math.random() * 3 + 1)} new risk factors detected in the last 24 hours\n• Model recommendation: Review high-dependency nodes in APAC region\n\nWould you like me to drill deeper into any of these areas?`,
-      };
-
-      const response = responses[msg] || responses.default;
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: response,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      }]);
-      setTyping(false);
-    }, 1500);
+      setMessages(prev => [...prev, { role: 'assistant', text: generateResponse(query) }]);
+    }, 400);
+    setInput('');
   };
 
   return (
     <div className="ai-assistant animate-fade-in">
       <div className="page-header">
         <div>
-          <h1>AI Assistant Workspace</h1>
-          <p>Natural language risk analysis · Powered by GPT-4 + VendorIQ Risk Engine</p>
+          <h1>Decision Intelligence Assistant</h1>
+          <p>Procurement analytics · Scoring logic · Event impact analysis · Mitigation strategies</p>
         </div>
       </div>
 
       <div className="assistant-layout">
         <div className="card chat-panel">
-          <div className="chat-feed" ref={feedRef}>
+          <div className="chat-messages">
             {messages.map((msg, i) => (
-              <div key={i} className={`chat-msg ${msg.role}`}>
-                <div className="chat-avatar">
-                  {msg.role === 'assistant' ? (
-                    <div className="ai-avatar">AI</div>
-                  ) : (
-                    <div className="user-avatar-sm">PK</div>
-                  )}
-                </div>
-                <div className="chat-bubble">
-                  <div className="chat-meta">
-                    <span className="chat-sender">{msg.role === 'assistant' ? 'VendorIQ AI' : 'You'}</span>
-                    <span className="chat-time">{msg.time}</span>
-                  </div>
-                  <div className="chat-text" dangerouslySetInnerHTML={{
-                    __html: msg.content
-                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                      .replace(/\n/g, '<br/>')
-                      .replace(/• /g, '&bull; ')
-                  }} />
-                </div>
+              <div key={i} className={`chat-bubble ${msg.role}`}>
+                <div className="chat-avatar">{msg.role === 'assistant' ? '◇' : '◉'}</div>
+                <div className="chat-text" dangerouslySetInnerHTML={{
+                  __html: msg.text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br/>')
+                }} />
               </div>
             ))}
-            {typing && (
-              <div className="chat-msg assistant">
-                <div className="chat-avatar"><div className="ai-avatar">AI</div></div>
-                <div className="chat-bubble">
-                  <div className="typing-indicator">
-                    <span></span><span></span><span></span>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
-
           <div className="chat-input-area">
-            <div className="suggested-queries">
-              {suggestedQueries.map((q, i) => (
-                <button key={i} className="suggested-btn" onClick={() => sendMessage(q)}>
-                  {q}
-                </button>
-              ))}
-            </div>
-            <div className="chat-input-row">
-              <input
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="Ask about vendor risks, predictions, alternatives..."
-                className="chat-input"
-              />
-              <button className="btn btn-primary" onClick={() => sendMessage()}>
-                Send
-              </button>
-            </div>
+            <input type="text" className="chat-input" placeholder="Ask about risk scores, events, weights, vendors..."
+              value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()} />
+            <button className="btn btn-primary btn-sm" onClick={() => handleSend()}>Send</button>
           </div>
         </div>
 
-        <div className="assistant-sidebar">
+        <div className="chat-sidebar">
           <div className="card">
-            <div className="card-header"><span className="card-title">Quick Actions</span></div>
-            <div className="quick-actions-list">
-              {[
-                { icon: '📊', label: 'Generate Risk Report' },
-                { icon: '🔍', label: 'Analyze Vendor' },
-                { icon: '🔄', label: 'Run Simulation' },
-                { icon: '📋', label: 'Compare Vendors' },
-                { icon: '⚠', label: 'Review Alerts' },
-              ].map((action, i) => (
-                <button key={i} className="quick-action-btn" onClick={() => sendMessage(action.label)}>
-                  <span>{action.icon}</span>
-                  <span>{action.label}</span>
-                </button>
+            <div className="card-header"><span className="card-title">Quick Queries</span></div>
+            <div className="quick-queries">
+              {presetQueries.map((q, i) => (
+                <button key={i} className="quick-query-btn" onClick={() => handleSend(q)}>{q}</button>
               ))}
             </div>
           </div>
-          <div className="card">
-            <div className="card-header"><span className="card-title">Session Context</span></div>
-            <div className="session-context">
-              <div className="ctx-item"><span className="ctx-label">Model</span><span className="ctx-val">GPT-4 + Risk v3.2</span></div>
-              <div className="ctx-item"><span className="ctx-label">Vendors</span><span className="ctx-val">15 active</span></div>
-              <div className="ctx-item"><span className="ctx-label">Data Points</span><span className="ctx-val">12,847</span></div>
-              <div className="ctx-item"><span className="ctx-label">Last Sync</span><span className="ctx-val">2 min ago</span></div>
+          <div className="card" style={{ marginTop: 'var(--space-3)' }}>
+            <div className="card-header"><span className="card-title">System Context</span></div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Vendors</span><span className="font-mono">{stats.total}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Critical</span><span className="font-mono" style={{ color: 'var(--color-danger)' }}>{stats.critical}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Active Events</span><span className="font-mono">{activeEvents.length}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Risk Index</span><span className="font-mono">{stats.avg}</span></div>
             </div>
           </div>
         </div>
