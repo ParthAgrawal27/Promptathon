@@ -1,0 +1,101 @@
+.cr-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-4);
+}
+
+.cr-canvas-card {
+  padding: var(--space-2);
+  overflow: hidden;
+}
+
+.cr-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cr-edge {
+  transition: stroke 0.3s ease, opacity 0.3s ease;
+}
+
+.cr-node {
+  transition: opacity 0.3s ease;
+}
+
+.cr-pulse-ring {
+  animation: pulse-ring 2.5s ease-in-out infinite;
+}
+
+/* ── Info Panel ─── */
+.cr-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cr-node-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cr-detail-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+}
+
+.cr-detail-row span:first-child {
+  color: var(--text-tertiary);
+}
+
+.cr-detail-row span:last-child {
+  font-weight: 600;
+}
+
+/* ── Summary ─── */
+.cr-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.cr-sum-val {
+  font-size: var(--text-2xl);
+  font-weight: 800;
+  font-family: var(--font-mono);
+  display: block;
+}
+
+.cr-sum-label {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+/* ── Legend ─── */
+.cr-legend {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cr-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.cr-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .cr-layout { grid-template-columns: 1fr; }
+}

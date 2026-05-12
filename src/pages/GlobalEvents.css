@@ -1,0 +1,63 @@
+.ge-active-strip {
+  background: rgba(220,38,38,0.04); border: 1px solid rgba(220,38,38,0.15);
+  border-radius: var(--radius-lg); padding: var(--space-4); margin-bottom: var(--space-4);
+}
+.ge-active-header { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); }
+.ge-active-icon { font-size: 1.1rem; }
+.ge-active-title { font-weight: 700; font-size: var(--text-sm); color: var(--color-danger); }
+.ge-active-list { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.ge-active-card {
+  background: #FFFFFF; border: 1px solid var(--border-default); border-radius: var(--radius-lg);
+  padding: var(--space-3); min-width: 280px; flex: 1;
+}
+.ge-active-card.severity-critical { border-left: 3px solid var(--color-danger); }
+.ge-active-card.severity-high { border-left: 3px solid #EA580C; }
+.ge-active-card.severity-moderate { border-left: 3px solid var(--color-warning); }
+.ge-active-card-top { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.ge-active-card-icon { font-size: 1.3rem; }
+.ge-active-card-info { flex: 1; }
+.ge-active-card-name { font-weight: 700; font-size: var(--text-sm); display: block; }
+.ge-active-card-region { font-size: var(--text-xs); color: var(--text-tertiary); }
+.ge-impacts { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.ge-impact-chip {
+  font-size: 10px; padding: 2px 6px; border-radius: var(--radius-sm); font-weight: 600; font-family: var(--font-mono);
+}
+.ge-impact-chip.negative { background: rgba(220,38,38,0.08); color: var(--color-danger); }
+.ge-impact-chip.positive { background: rgba(5,150,105,0.08); color: var(--color-success); }
+
+.ge-filters { display: flex; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+.ge-layout { display: grid; grid-template-columns: 1.3fr 0.7fr; gap: var(--space-4); }
+.ge-catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-3); }
+.ge-event-card { padding: var(--space-4) !important; }
+.ge-event-card.injected { border-color: var(--color-danger); background: rgba(220,38,38,0.02); }
+.ge-event-top { display: flex; align-items: flex-start; gap: var(--space-2); margin-bottom: var(--space-2); }
+.ge-event-icon { font-size: 1.4rem; }
+.ge-event-meta { flex: 1; }
+.ge-event-name { font-weight: 700; font-size: var(--text-sm); display: block; }
+.ge-event-type { font-size: var(--text-xs); color: var(--text-tertiary); }
+.ge-event-desc { font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.5; margin-bottom: var(--space-2); }
+.ge-event-impacts { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-1); }
+.ge-event-impact-row { display: flex; justify-content: space-between; font-size: var(--text-xs); }
+.ge-event-impact-label { color: var(--text-tertiary); }
+.ge-event-impact-val { font-family: var(--font-mono); font-weight: 700; }
+.ge-event-impact-val.bad { color: var(--color-danger); }
+.ge-event-impact-val.good { color: var(--color-success); }
+
+.ge-affected { display: flex; flex-direction: column; gap: var(--space-4); }
+.ge-affected-list { display: flex; flex-direction: column; }
+.ge-affected-row {
+  display: flex; align-items: center; gap: var(--space-2);
+  padding: var(--space-2) 0; border-bottom: 1px solid var(--border-default);
+}
+.ge-affected-row:last-child { border-bottom: none; }
+.ge-affected-info { flex: 1; }
+.ge-affected-name { font-weight: 600; font-size: var(--text-sm); display: block; }
+.ge-affected-region { font-size: var(--text-xs); color: var(--text-tertiary); }
+.ge-affected-score { font-weight: 800; font-size: var(--text-md); min-width: 28px; }
+
+.ge-impact-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); text-align: center; }
+.ge-impact-stat-val { font-size: var(--text-2xl); font-weight: 800; display: block; }
+.ge-impact-stat-label { font-size: var(--text-xs); color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+@media (max-width: 1000px) { .ge-layout { grid-template-columns: 1fr; } }

@@ -1,0 +1,147 @@
+.sec-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: var(--space-4);
+}
+
+.sec-log-card { overflow: hidden; }
+
+.audit-log {
+  display: flex;
+  flex-direction: column;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-default);
+  font-size: var(--text-xs);
+  transition: background var(--transition-fast);
+}
+
+.log-entry:hover {
+  background: var(--bg-card-hover);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.log-entry.success .log-status-dot { background: var(--color-success); }
+.log-entry.warning .log-status-dot { background: var(--color-warning); }
+.log-entry.error .log-status-dot { background: var(--color-danger); }
+
+.log-time {
+  color: var(--text-muted);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.log-user {
+  color: var(--color-primary);
+  font-weight: 500;
+  min-width: 160px;
+}
+
+.log-action {
+  color: var(--text-primary);
+  font-weight: 600;
+  min-width: 100px;
+}
+
+.log-resource {
+  color: var(--text-tertiary);
+  flex: 1;
+}
+
+.log-ip {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+/* ── Sidebar ─── */
+.sec-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.token-meter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.token-ring {
+  position: relative;
+}
+
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.session-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.session-dot.active {
+  background: var(--color-success);
+  box-shadow: 0 0 4px var(--color-success);
+}
+
+.net-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.net-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+}
+
+.net-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.net-dot.healthy { background: var(--color-success); }
+.net-dot.degraded { background: var(--color-warning); }
+
+.net-name {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.net-latency {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+@media (max-width: 1200px) {
+  .sec-grid { grid-template-columns: 1fr; }
+}

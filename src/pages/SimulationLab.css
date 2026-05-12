@@ -1,0 +1,18 @@
+.sim-layout { display: grid; grid-template-columns: 0.4fr 1fr; gap: var(--space-4); }
+.sim-controls { padding: var(--space-4) !important; }
+.sim-scenarios { display: flex; flex-direction: column; gap: var(--space-2); }
+.sim-scenario-btn {
+  display: flex; align-items: center; gap: var(--space-2); padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md); border: 1px solid var(--border-default); background: #FFFFFF;
+  cursor: pointer; transition: all 150ms; text-align: left; font-size: var(--text-xs);
+}
+.sim-scenario-btn:hover { border-color: var(--border-hover); box-shadow: var(--shadow-sm); }
+.sim-scenario-btn.active { border-color: var(--color-danger); background: rgba(220,38,38,0.04); }
+.sim-scenario-name { flex: 1; font-weight: 600; }
+
+.sim-flow-card { padding: var(--space-4) !important; overflow: hidden; }
+.sim-svg { width: 100%; display: block; border-radius: var(--radius-md); }
+@keyframes flow-pulse { 0%,100%{ r:34; opacity:0.2; } 50%{ r:38; opacity:0.1; } }
+.flow-node.pulse { animation: flow-pulse 2s ease-in-out infinite; }
+
+@media (max-width: 900px) { .sim-layout { grid-template-columns: 1fr; } }
