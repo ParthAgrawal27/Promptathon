@@ -5,9 +5,20 @@ import { parameterConfig, riskProfiles } from '../data/mockData';
 import './ExecutiveOverview.css';
 
 export default function ExecutiveOverview() {
-  const { scoredVendors, stats, weights, activeEvents, activeProfile, applyProfile } = useRiskEngine();
+  const { scoredVendors, stats, weights, activeEvents, activeProfile, applyProfile, loading } = useRiskEngine();
   const navigate = useNavigate();
   const [treeExpanded, setTreeExpanded] = useState({ gpr: true, ops: true, fin: true });
+
+  if (loading) {
+    return (
+      <div className="exec-overview animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+          <p>Loading 5,000 vendor risk profiles...</p>
+        </div>
+      </div>
+    );
+  }
 
   const topRisk = scoredVendors.slice(0, 5);
   const topVendor = scoredVendors[0];

@@ -1,28 +1,51 @@
-import { useState } from 'react';
-import { vendors } from '../data/mockData';
+import { useState, useMemo } from 'react';
+import { useRiskEngine } from '../context/RiskEngine';
+import { parameterConfig } from '../data/mockData';
 import './VendorComparison.css';
 
 export default function VendorComparison() {
-  const [vendorA, setVendorA] = useState(vendors[0]);
-  const [vendorB, setVendorB] = useState(vendors[2]);
+  const { scoredVendors, loading } = useRiskEngine();
+  const [vendorAId, setVendorAId] = useState(null);
+  const [vendorBId, setVendorBId] = useState(null);
 
-  const metrics = [
-    { label: 'Risk Score', key: 'riskScore', inv: true },
-    { label: 'Delivery Reliability', key: 'deliveryReliability', inv: false },
-    { label: 'Financial Health', key: 'financialHealth', inv: false },
-    { label: 'Defect Rate', key: 'defectRate', inv: true, suffix: '%' },
-    { label: 'Predicted Failure', key: 'predictedFailure', inv: true, suffix: '%' },
+  // Default to first two once loaded
+  const vendorA = scoredVendors.find(v => v.id === vendorAId) || scoredVendors[0];
+  const vendorB = scoredVendors.find(v => v.id === vendorBId) || scoredVendors[2];
+
+  const comparisonParams = [
+    { key: 'OnTime_Delivery', higher: 'better' },
+    { key: 'Defect_Rate_PPM', higher: 'worse' },
+    { key: 'Field_Failure_Rate', higher: 'worse' },
+    { key: 'Financial_Stability', higher: 'better' },
+    { key: 'Inspection_Pass_Rate', higher: 'better' },
+    { key: 'Avg_Lead_Time', higher: 'worse' },
+    { key: 'Shipment_Accuracy', higher: 'better' },
+    { key: 'Audit_Score', higher: 'better' },
+    { key: 'GPR_Score', higher: 'worse' },
+    { key: 'ESG_Score', higher: 'better' },
+    { key: 'Carbon_Score', higher: 'better' },
+    { key: 'Labor_Compliance', higher: 'better' },
   ];
 
-  const getCompColor = (a, b, inv) => {
-    if (inv) return a > b ? 'var(--color-danger)' : a < b ? 'var(--color-success)' : 'var(--text-secondary)';
+  const getCompColor = (a, b, higherIsWorse) => {
+    if (higherIsWorse) return a > b ? 'var(--color-danger)' : a < b ? 'var(--color-success)' : 'var(--text-secondary)';
     return a > b ? 'var(--color-success)' : a < b ? 'var(--color-danger)' : 'var(--text-secondary)';
   };
 
   // Radar chart values (normalized 0-100)
-  const radarMetrics = ['Delivery', 'Financial', 'Quality', 'ESG', 'Reliability'];
-  const radarA = [vendorA.deliveryReliability, vendorA.financialHealth, 100 - vendorA.defectRate * 10, vendorA.esgRating === 'A+' ? 95 : vendorA.esgRating === 'A' ? 85 : vendorA.esgRating === 'B+' ? 75 : vendorA.esgRating === 'B' ? 65 : vendorA.esgRating === 'B-' ? 55 : vendorA.esgRating === 'C+' ? 45 : vendorA.esgRating === 'C' ? 35 : 25, 100 - vendorA.predictedFailure];
-  const radarB = [vendorB.deliveryReliability, vendorB.financialHealth, 100 - vendorB.defectRate * 10, vendorB.esgRating === 'A+' ? 95 : vendorB.esgRating === 'A' ? 85 : vendorB.esgRating === 'B+' ? 75 : vendorB.esgRating === 'B' ? 65 : vendorB.esgRating === 'B-' ? 55 : vendorB.esgRating === 'C+' ? 45 : vendorB.esgRating === 'C' ? 35 : 25, 100 - vendorB.predictedFailure];
+  const radarMetrics = ['Delivery', 'Financial', 'Quality', 'ESG', 'Logistics'];
+  const getRadarValues = (v) => {
+    if (!v || !v.params) return [50, 50, 50, 50, 50];
+    return [
+      v.params.OnTime_Delivery || 50,
+      v.params.Financial_Stability || 50,
+      100 - Math.min(100, (v.params.Defect_Rate_PPM || 0) / 20),
+      v.params.ESG_Score || 50,
+      v.params.Shipment_Accuracy || 50,
+    ];
+  };
+  const radarA = getRadarValues(vendorA);
+  const radarB = getRadarValues(vendorB);
 
   const radarPoints = (values, cx, cy, r) => {
     return values.map((v, i) => {
@@ -35,12 +58,34 @@ export default function VendorComparison() {
 
   const cx = 150, cy = 130, r = 100;
 
+  // Recommendation
+  const recommendation = useMemo(() => {
+    if (!vendorA || !vendorB) return null;
+    const better = vendorA.riskScore < vendorB.riskScore ? vendorA : vendorB;
+    const worse = vendorA.riskScore < vendorB.riskScore ? vendorB : vendorA;
+    const diff = worse.riskScore - better.riskScore;
+    return { better, worse, diff };
+  }, [vendorA, vendorB]);
+
+  if (loading) {
+    return (
+      <div className="vendor-comparison animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+          <p>Loading 5,000 vendors...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!vendorA || !vendorB) return <div>No vendors loaded</div>;
+
   return (
     <div className="vendor-comparison animate-fade-in">
       <div className="page-header">
         <div>
           <h1>Vendor Comparison & Ranking</h1>
-          <p>Side-by-side vendor analysis with AI-powered recommendations</p>
+          <p>Side-by-side vendor analysis with analytical risk assessment · {scoredVendors.length} vendors</p>
         </div>
       </div>
 
@@ -48,15 +93,15 @@ export default function VendorComparison() {
       <div className="comp-selectors card">
         <div className="comp-select-group">
           <label>Vendor A</label>
-          <select value={vendorA.id} onChange={(e) => setVendorA(vendors.find(v => v.id === Number(e.target.value)))}>
-            {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+          <select value={vendorA.id} onChange={(e) => setVendorAId(Number(e.target.value))}>
+            {scoredVendors.map(v => <option key={v.id} value={v.id}>{v.name} ({v.vendorId})</option>)}
           </select>
         </div>
         <div className="comp-vs">VS</div>
         <div className="comp-select-group">
           <label>Vendor B</label>
-          <select value={vendorB.id} onChange={(e) => setVendorB(vendors.find(v => v.id === Number(e.target.value)))}>
-            {vendors.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
+          <select value={vendorB.id} onChange={(e) => setVendorBId(Number(e.target.value))}>
+            {scoredVendors.map(v => <option key={v.id} value={v.id}>{v.name} ({v.vendorId})</option>)}
           </select>
         </div>
       </div>
@@ -104,7 +149,7 @@ export default function VendorComparison() {
         {/* Metrics Comparison */}
         <div className="card comp-metrics-card">
           <div className="card-header">
-            <span className="card-title">Metric Comparison</span>
+            <span className="card-title">Parameter Comparison</span>
           </div>
           <div className="comp-table">
             <div className="comp-row header">
@@ -112,38 +157,50 @@ export default function VendorComparison() {
               <span>Metric</span>
               <span>{vendorB.name}</span>
             </div>
-            {metrics.map((m) => (
-              <div key={m.key} className="comp-row">
-                <span className="comp-val" style={{ color: getCompColor(vendorA[m.key], vendorB[m.key], m.inv) }}>
-                  {vendorA[m.key]}{m.suffix || ''}
-                </span>
-                <span className="comp-metric-label">{m.label}</span>
-                <span className="comp-val" style={{ color: getCompColor(vendorB[m.key], vendorA[m.key], m.inv) }}>
-                  {vendorB[m.key]}{m.suffix || ''}
-                </span>
-              </div>
-            ))}
+            {/* Risk Score */}
+            <div className="comp-row">
+              <span className="comp-val" style={{ color: vendorA.riskColor }}>{vendorA.riskScore}</span>
+              <span className="comp-metric-label">Risk Score</span>
+              <span className="comp-val" style={{ color: vendorB.riskColor }}>{vendorB.riskScore}</span>
+            </div>
+            {comparisonParams.map((m) => {
+              const cfg = parameterConfig[m.key];
+              const valA = vendorA.params[m.key];
+              const valB = vendorB.params[m.key];
+              if (valA === undefined && valB === undefined) return null;
+              const fmtA = typeof valA === 'number' ? (Number.isInteger(valA) ? valA : valA.toFixed(1)) : '-';
+              const fmtB = typeof valB === 'number' ? (Number.isInteger(valB) ? valB : valB.toFixed(1)) : '-';
+              return (
+                <div key={m.key} className="comp-row">
+                  <span className="comp-val" style={{ color: getCompColor(valA, valB, m.higher === 'worse') }}>
+                    {fmtA}{cfg?.unit ? ` ${cfg.unit}` : ''}
+                  </span>
+                  <span className="comp-metric-label">{cfg?.icon} {cfg?.label}</span>
+                  <span className="comp-val" style={{ color: getCompColor(valB, valA, m.higher === 'worse') }}>
+                    {fmtB}{cfg?.unit ? ` ${cfg.unit}` : ''}
+                  </span>
+                </div>
+              );
+            })}
             <div className="comp-row">
               <span className={`badge ${vendorA.riskBand.toLowerCase()}`}>{vendorA.riskBand}</span>
               <span className="comp-metric-label">Risk Band</span>
               <span className={`badge ${vendorB.riskBand.toLowerCase()}`}>{vendorB.riskBand}</span>
             </div>
-            <div className="comp-row">
-              <span className="comp-val">{vendorA.esgRating}</span>
-              <span className="comp-metric-label">ESG Rating</span>
-              <span className="comp-val">{vendorB.esgRating}</span>
-            </div>
           </div>
 
           <div className="divider"></div>
           <div className="comp-ai-rec">
-            <span className="card-title" style={{ marginBottom: 'var(--space-2)', display: 'block' }}>AI Recommendation</span>
-            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-              <strong style={{ color: 'var(--color-success)' }}>{vendorB.name}</strong> is the stronger choice with a
-              risk score <strong>{vendorA.riskScore - vendorB.riskScore} points lower</strong> and
-              superior delivery reliability ({vendorB.deliveryReliability}% vs {vendorA.deliveryReliability}%).
-              Consider transitioning critical volumes to reduce supply chain exposure.
-            </p>
+            <span className="card-title" style={{ marginBottom: 'var(--space-2)', display: 'block' }}>Analytical Recommendation</span>
+            {recommendation && (
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                <strong style={{ color: 'var(--color-success)' }}>{recommendation.better.name}</strong> has a
+                risk score <strong>{recommendation.diff} points lower</strong> ({recommendation.better.riskScore} vs {recommendation.worse.riskScore}).
+                Key advantages include {recommendation.better.params.OnTime_Delivery?.toFixed(1)}% on-time delivery
+                and a financial stability of {recommendation.better.params.Financial_Stability?.toFixed(0)}/100.
+                Consider prioritizing this vendor for critical supply chain operations.
+              </p>
+            )}
           </div>
         </div>
       </div>

@@ -1,12 +1,28 @@
-import { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { vendorRawData, defaultWeights, riskProfiles, calcVendorScore, getRiskBand, getRiskColor, eventCatalog } from '../data/mockData';
+import { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
+import { defaultWeights, riskProfiles, calcVendorScore, getRiskBand, getRiskColor, eventCatalog } from '../data/mockData';
+import { loadVendors } from '../data/csvLoader';
 
 const RiskEngineContext = createContext(null);
 
 export function RiskEngineProvider({ children }) {
+  const [vendorRawData, setVendorRawData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [weights, setWeights] = useState({ ...defaultWeights });
   const [activeProfile, setActiveProfile] = useState('balanced');
   const [activeEvents, setActiveEvents] = useState([]);
+
+  // Load CSV data on mount
+  useEffect(() => {
+    loadVendors()
+      .then(vendors => {
+        setVendorRawData(vendors);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load vendor data:', err);
+        setLoading(false);
+      });
+  }, []);
 
   // Single weight update
   const updateWeight = useCallback((param, value) => {
@@ -41,6 +57,7 @@ export function RiskEngineProvider({ children }) {
 
   // Compute all vendor scores (memoized)
   const scoredVendors = useMemo(() => {
+    if (vendorRawData.length === 0) return [];
     return vendorRawData.map(v => {
       const { score, contributions, modifiedParams } = calcVendorScore(v, weights, activeEvents);
       return {
@@ -52,10 +69,11 @@ export function RiskEngineProvider({ children }) {
         modifiedParams,
       };
     }).sort((a, b) => b.riskScore - a.riskScore);
-  }, [weights, activeEvents]);
+  }, [vendorRawData, weights, activeEvents]);
 
   // Summary stats
   const stats = useMemo(() => {
+    if (scoredVendors.length === 0) return { critical: 0, high: 0, moderate: 0, low: 0, avg: 0, total: 0 };
     const critical = scoredVendors.filter(v => v.riskBand === 'Critical').length;
     const high = scoredVendors.filter(v => v.riskBand === 'High').length;
     const moderate = scoredVendors.filter(v => v.riskBand === 'Moderate').length;
@@ -67,7 +85,7 @@ export function RiskEngineProvider({ children }) {
   const value = {
     weights, updateWeight, applyProfile, activeProfile,
     activeEvents, injectEvent, removeEvent, clearEvents,
-    scoredVendors, stats,
+    scoredVendors, stats, loading,
   };
 
   return <RiskEngineContext.Provider value={value}>{children}</RiskEngineContext.Provider>;

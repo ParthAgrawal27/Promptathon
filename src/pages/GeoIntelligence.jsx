@@ -1,20 +1,40 @@
+import { useMemo } from 'react';
 import { useRiskEngine } from '../context/RiskEngine';
-import { vendorRawData, regionConfig } from '../data/mockData';
+import { regionConfig } from '../data/mockData';
 import './GeoIntelligence.css';
 
 export default function GeoIntelligence() {
-  const { scoredVendors, activeEvents } = useRiskEngine();
+  const { scoredVendors, activeEvents, loading } = useRiskEngine();
 
-  const regions = {};
-  scoredVendors.forEach(v => {
-    if (!regions[v.region]) regions[v.region] = { vendors: [], totalRisk: 0 };
-    regions[v.region].vendors.push(v);
-    regions[v.region].totalRisk += v.riskScore;
-  });
+  const regions = useMemo(() => {
+    const r = {};
+    scoredVendors.forEach(v => {
+      if (!r[v.region]) r[v.region] = { vendors: [], totalRisk: 0 };
+      r[v.region].vendors.push(v);
+      r[v.region].totalRisk += v.riskScore;
+    });
+    return r;
+  }, [scoredVendors]);
+
+  // Only render top 200 dots on map for performance
+  const mapVendors = useMemo(() => {
+    return scoredVendors.slice(0, 200);
+  }, [scoredVendors]);
 
   // Vendor map dots (simple SVG world projection)
   const projectLat = (lat) => (90 - lat) * (400 / 180);
   const projectLng = (lng) => (lng + 180) * (800 / 360);
+
+  if (loading) {
+    return (
+      <div className="geo-intel animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+          <p>Loading geo-intelligence data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="geo-intel animate-fade-in">
@@ -52,8 +72,8 @@ export default function GeoIntelligence() {
             <ellipse cx="650" cy="300" rx="40" ry="30" />{/* Australia */}
           </g>
           {/* Active event zones */}
-          {activeEvents.map((evt, i) => {
-            const regionVendors = scoredVendors.filter(v => evt.region === 'Global' || v.region === evt.region);
+          {activeEvents.map((evt) => {
+            const regionVendors = mapVendors.filter(v => evt.region === 'Global' || v.region === evt.region);
             if (regionVendors.length === 0) return null;
             const cx = regionVendors.reduce((a, v) => a + projectLng(v.lng), 0) / regionVendors.length;
             const cy = regionVendors.reduce((a, v) => a + projectLat(v.lat), 0) / regionVendors.length;
@@ -67,18 +87,15 @@ export default function GeoIntelligence() {
               </g>
             );
           })}
-          {/* Vendor dots */}
-          {scoredVendors.map(v => {
+          {/* Vendor dots (top 200 only for performance) */}
+          {mapVendors.map(v => {
             const x = projectLng(v.lng);
             const y = projectLat(v.lat);
             const isAffected = activeEvents.some(e => e.region === 'Global' || e.region === v.region);
             return (
               <g key={v.id}>
-                {isAffected && <circle cx={x} cy={y} r="10" fill={v.riskColor} opacity="0.2" className="geo-dot-pulse" />}
-                <circle cx={x} cy={y} r="4" fill={v.riskColor} stroke="#0F172A" strokeWidth="1.5" />
-                <text x={x} y={y - 8} textAnchor="middle" fill="#CBD5E1" fontSize="7" fontFamily="Inter">
-                  {v.name.split(' ')[0]}
-                </text>
+                {isAffected && <circle cx={x} cy={y} r="8" fill={v.riskColor} opacity="0.2" className="geo-dot-pulse" />}
+                <circle cx={x} cy={y} r="3" fill={v.riskColor} stroke="#0F172A" strokeWidth="1" />
               </g>
             );
           })}
@@ -90,6 +107,9 @@ export default function GeoIntelligence() {
                 <text x="12" y="7" fill="#94A3B8" fontSize="8" fontFamily="Inter">{item.l}</text>
               </g>
             ))}
+            <text x="380" y="7" fill="#64748B" fontSize="7" fontFamily="Inter">
+              Showing top 200 of {scoredVendors.length} vendors
+            </text>
           </g>
         </svg>
       </div>
@@ -100,6 +120,7 @@ export default function GeoIntelligence() {
           const avg = Math.round(data.totalRisk / data.vendors.length);
           const cfg = regionConfig[region] || { color: '#6366F1', abbr: '??' };
           const critical = data.vendors.filter(v => v.riskBand === 'Critical').length;
+          const topVendors = data.vendors.sort((a, b) => b.riskScore - a.riskScore).slice(0, 5);
           return (
             <div key={region} className="card geo-region-card">
               <div className="geo-region-header">
@@ -115,12 +136,17 @@ export default function GeoIntelligence() {
               </div>
               {critical > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>⚠ {critical} critical vendor{critical > 1 ? 's' : ''}</span>}
               <div className="geo-region-vendors">
-                {data.vendors.map(v => (
+                {topVendors.map(v => (
                   <div key={v.id} className="geo-rv">
                     <span className="geo-rv-name">{v.name}</span>
                     <span className="geo-rv-score font-mono" style={{ color: v.riskColor }}>{v.riskScore}</span>
                   </div>
                 ))}
+                {data.vendors.length > 5 && (
+                  <div className="geo-rv" style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    <span className="geo-rv-name">+{data.vendors.length - 5} more</span>
+                  </div>
+                )}
               </div>
             </div>
           );

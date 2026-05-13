@@ -146,8 +146,8 @@ export default function AIAssistant() {
             <div className="card-header"><span className="card-title">Session Context</span></div>
             <div className="session-context">
               <div className="ctx-item"><span className="ctx-label">Model</span><span className="ctx-val">GPT-4 + Risk v3.2</span></div>
-              <div className="ctx-item"><span className="ctx-label">Vendors</span><span className="ctx-val">15 active</span></div>
-              <div className="ctx-item"><span className="ctx-label">Data Points</span><span className="ctx-val">12,847</span></div>
+              <div className="ctx-item"><span className="ctx-label">Vendors</span><span className="ctx-val">5,000 active</span></div>
+              <div className="ctx-item"><span className="ctx-label">Data Points</span><span className="ctx-val">150,000</span></div>
               <div className="ctx-item"><span className="ctx-label">Last Sync</span><span className="ctx-val">2 min ago</span></div>
             </div>
           </div>

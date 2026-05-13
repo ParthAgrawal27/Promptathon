@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useRiskEngine } from '../context/RiskEngine';
-import { vendorRawData, calcVendorScore, getRiskColor, eventCatalog } from '../data/mockData';
+import { calcVendorScore, getRiskColor, eventCatalog } from '../data/mockData';
 import './SimulationLab.css';
 
 const flowNodes = [
@@ -18,29 +18,32 @@ const flowEdges = [
 ];
 
 export default function SimulationLab() {
-  const { weights, activeEvents, injectEvent, removeEvent } = useRiskEngine();
+  const { weights, activeEvents, scoredVendors, loading } = useRiskEngine();
   const [simEvents, setSimEvents] = useState([]);
   const [selectedScenario, setSelectedScenario] = useState(null);
+
+  // Use a subset (top 100 by risk) for simulation performance
+  const vendorSubset = useMemo(() => scoredVendors.slice(0, 100), [scoredVendors]);
 
   const allSimEvents = [...activeEvents, ...simEvents.filter(se => !activeEvents.find(ae => ae.id === se.id))];
 
   // Simulate vendor scores with current weights + sim events
   const simVendors = useMemo(() => {
-    return vendorRawData.map(v => {
+    return vendorSubset.map(v => {
       const { score } = calcVendorScore(v, weights, allSimEvents);
       return { ...v, simScore: score, simColor: getRiskColor(score) };
     }).sort((a, b) => b.simScore - a.simScore);
-  }, [weights, allSimEvents]);
+  }, [vendorSubset, weights, allSimEvents]);
 
   const baseVendors = useMemo(() => {
-    return vendorRawData.map(v => {
+    return vendorSubset.map(v => {
       const { score } = calcVendorScore(v, weights, []);
       return { ...v, baseScore: score };
     });
-  }, [weights]);
+  }, [vendorSubset, weights]);
 
-  const avgSim = Math.round(simVendors.reduce((a, v) => a + v.simScore, 0) / simVendors.length);
-  const avgBase = Math.round(baseVendors.reduce((a, v) => a + v.baseScore, 0) / baseVendors.length);
+  const avgSim = simVendors.length ? Math.round(simVendors.reduce((a, v) => a + v.simScore, 0) / simVendors.length) : 0;
+  const avgBase = baseVendors.length ? Math.round(baseVendors.reduce((a, v) => a + v.baseScore, 0) / baseVendors.length) : 0;
   const delta = avgSim - avgBase;
 
   const toggleSimEvent = (evt) => {

@@ -1,23 +1,61 @@
 /* ═══════════════════════════════════════════════════════════════════
    VendorIQ – Analytical Intelligence Data Layer
+   Expanded to 25 parameters from 5,000-vendor CSV dataset
    Raw vendor parameters · Event catalog · Risk frameworks
    ═══════════════════════════════════════════════════════════════════ */
 
-// ── Parameter Configuration ─────────────────────────────────────
+// ── Parameter Configuration (25 params, 6 categories) ───────────
 export const parameterConfig = {
-  OnTime_Delivery:     { label: 'On-Time Delivery',    unit: '%',   invert: true,  min: 40, max: 100, icon: '📦', category: 'Operations' },
-  Defect_Rate_PPM:     { label: 'Defect Rate (PPM)',   unit: 'PPM', invert: false, min: 0,  max: 10000, icon: '🔍', category: 'Quality' },
-  Field_Failure_Rate:  { label: 'Field Failure Rate',  unit: '%',   invert: false, min: 0,  max: 10, icon: '⚠', category: 'Quality' },
-  Financial_Stability: { label: 'Financial Stability', unit: '/100',invert: true,  min: 0,  max: 100, icon: '💰', category: 'Financial' },
-  Inspection_Pass_Rate:{ label: 'Inspection Pass Rate',unit: '%',   invert: true,  min: 50, max: 100, icon: '✅', category: 'Quality' },
-  Avg_Lead_Time:       { label: 'Avg Lead Time',       unit: 'days',invert: false, min: 1,  max: 45, icon: '⏱', category: 'Logistics' },
-  Shipment_Accuracy:   { label: 'Shipment Accuracy',   unit: '%',   invert: true,  min: 60, max: 100, icon: '🎯', category: 'Logistics' },
-  Audit_Score:         { label: 'Audit Score',         unit: '/100',invert: true,  min: 0,  max: 100, icon: '📋', category: 'Compliance' },
-  Capacity_Utilization:{ label: 'Capacity Utilization',unit: '%',   invert: false, min: 30, max: 100, icon: '⚙', category: 'Operations' },
-  GPR_Score:           { label: 'Geopolitical Risk',   unit: '/100',invert: false, min: 0,  max: 100, icon: '🌍', category: 'Geopolitical' },
+  // === Operations ===
+  OnTime_Delivery:       { label: 'On-Time Delivery',      unit: '%',    invert: true,  min: 40,  max: 100,   icon: '📦', category: 'Operations' },
+  Avg_Lead_Time:         { label: 'Avg Lead Time',          unit: 'days', invert: false, min: 1,   max: 45,    icon: '⏱',  category: 'Operations' },
+  Lead_Time_Variability: { label: 'Lead Time Variability',  unit: 'σ',    invert: false, min: 0,   max: 10,    icon: '📊', category: 'Operations' },
+  Emergency_Fulfillment: { label: 'Emergency Fulfillment',  unit: '%',    invert: true,  min: 20,  max: 100,   icon: '🚨', category: 'Operations' },
+  Avg_Days_Late:         { label: 'Avg Days Late',          unit: 'days', invert: false, min: 0,   max: 10,    icon: '📅', category: 'Operations' },
+
+  // === Quality ===
+  Defect_Rate_PPM:       { label: 'Defect Rate (PPM)',      unit: 'PPM',  invert: false, min: 0,   max: 2000,  icon: '🔍', category: 'Quality' },
+  Field_Failure_Rate:    { label: 'Field Failure Rate',     unit: '%',    invert: false, min: 0,   max: 5,     icon: '⚠',  category: 'Quality' },
+  Warranty_Claims:       { label: 'Warranty Claims',        unit: '/yr',  invert: false, min: 0,   max: 3,     icon: '🛡',  category: 'Quality' },
+  Inspection_Pass_Rate:  { label: 'Inspection Pass Rate',   unit: '%',    invert: true,  min: 50,  max: 100,   icon: '✅', category: 'Quality' },
+  Certification_Score:   { label: 'Certification Score',    unit: '/100', invert: true,  min: 0,   max: 100,   icon: '🏅', category: 'Quality' },
+
+  // === Financial ===
+  Financial_Stability:   { label: 'Financial Stability',    unit: '/100', invert: true,  min: 0,   max: 100,   icon: '💰', category: 'Financial' },
+  Revenue_Trend:         { label: 'Revenue Trend',          unit: '%',    invert: true,  min: -10, max: 10,    icon: '📈', category: 'Financial' },
+  Debt_Equity:           { label: 'Debt-to-Equity Ratio',   unit: 'x',    invert: false, min: 0,   max: 3,     icon: '💳', category: 'Financial' },
+  DPO:                   { label: 'Days Payable Outstanding',unit: 'days', invert: false, min: 10,  max: 90,    icon: '🏦', category: 'Financial' },
+
+  // === Logistics ===
+  Shipment_Accuracy:     { label: 'Shipment Accuracy',      unit: '%',    invert: true,  min: 60,  max: 100,   icon: '🎯', category: 'Logistics' },
+  Carrier_Dependency:    { label: 'Carrier Dependency',     unit: '%',    invert: false, min: 0,   max: 100,   icon: '🚛', category: 'Logistics' },
+
+  // === Geopolitical ===
+  GPR_Score:             { label: 'Geopolitical Risk',      unit: '/100', invert: false, min: 0,   max: 100,   icon: '🌍', category: 'Geopolitical' },
+  Tariff_Exposure:       { label: 'Tariff Exposure',        unit: '%',    invert: false, min: 0,   max: 100,   icon: '📜', category: 'Geopolitical' },
+  Disaster_Risk:         { label: 'Disaster Risk',          unit: '/100', invert: false, min: 0,   max: 100,   icon: '🌋', category: 'Geopolitical' },
+  Single_Source:         { label: 'Single Source Risk',     unit: '',     invert: false, min: 0,   max: 1,     icon: '⚡', category: 'Geopolitical' },
+  Tier2_Visibility:      { label: 'Tier-2 Visibility',      unit: '/10',  invert: true,  min: 0,   max: 10,    icon: '👁',  category: 'Geopolitical' },
+
+  // === ESG & Compliance ===
+  Audit_Score:           { label: 'Audit Score',            unit: '/100', invert: true,  min: 0,   max: 100,   icon: '📋', category: 'ESG & Compliance' },
+  Carbon_Score:          { label: 'Carbon Score',           unit: '/100', invert: true,  min: 0,   max: 100,   icon: '🌱', category: 'ESG & Compliance' },
+  Labor_Compliance:      { label: 'Labor Compliance',       unit: '/100', invert: true,  min: 0,   max: 100,   icon: '👷', category: 'ESG & Compliance' },
+  ESG_Score:             { label: 'ESG Score',              unit: '/100', invert: true,  min: 0,   max: 100,   icon: '🌿', category: 'ESG & Compliance' },
 };
 
-// ── Default Weights (sum to 100) ────────────────────────────────
+// ── Scored Weight Keys (the 10 primary params used in the weighted scoring) ──
+// We keep scoring to a focused set of 10 params for clarity; the rest are displayed as context.
+export const scoredParamKeys = [
+  'OnTime_Delivery', 'Defect_Rate_PPM', 'Field_Failure_Rate',
+  'Financial_Stability', 'Inspection_Pass_Rate', 'Avg_Lead_Time',
+  'Shipment_Accuracy', 'Audit_Score', 'Capacity_Utilization', 'GPR_Score',
+];
+
+// All param keys for display (25)
+export const allParamKeys = Object.keys(parameterConfig);
+
+// ── Default Weights (sum to 100, for the 10 scored params) ──────
 export const defaultWeights = {
   OnTime_Delivery: 15,
   Defect_Rate_PPM: 10,
@@ -45,40 +83,6 @@ export const riskProfiles = [
     weights: { OnTime_Delivery: 10, Defect_Rate_PPM: 5, Field_Failure_Rate: 5, Financial_Stability: 30, Inspection_Pass_Rate: 5, Avg_Lead_Time: 8, Shipment_Accuracy: 5, Audit_Score: 12, Capacity_Utilization: 10, GPR_Score: 10 } },
   { id: 'geopolitical', name: 'Geopolitical Sensitive', icon: '🌐', desc: 'Maximum geopolitical and regional risk awareness',
     weights: { OnTime_Delivery: 8, Defect_Rate_PPM: 5, Field_Failure_Rate: 3, Financial_Stability: 12, Inspection_Pass_Rate: 3, Avg_Lead_Time: 12, Shipment_Accuracy: 7, Audit_Score: 8, Capacity_Utilization: 7, GPR_Score: 35 } },
-];
-
-// ── Raw Vendor Data (pre-scoring) ───────────────────────────────
-export const vendorRawData = [
-  { id: 1, name: 'Shenzhen Electronics', region: 'Asia Pacific', country: 'China', tier: 'T1', category: 'Electronics', contractValue: '$4.2M', lat: 22.54, lng: 114.06,
-    params: { OnTime_Delivery: 55, Defect_Rate_PPM: 5700, Field_Failure_Rate: 3.2, Financial_Stability: 32, Inspection_Pass_Rate: 78, Avg_Lead_Time: 28, Shipment_Accuracy: 82, Audit_Score: 45, Capacity_Utilization: 92, GPR_Score: 78 }},
-  { id: 2, name: 'Apex Manufacturing Co.', region: 'Asia Pacific', country: 'Taiwan', tier: 'T1', category: 'Semiconductors', contractValue: '$3.8M', lat: 25.03, lng: 121.57,
-    params: { OnTime_Delivery: 62, Defect_Rate_PPM: 4200, Field_Failure_Rate: 2.8, Financial_Stability: 45, Inspection_Pass_Rate: 81, Avg_Lead_Time: 24, Shipment_Accuracy: 85, Audit_Score: 52, Capacity_Utilization: 88, GPR_Score: 72 }},
-  { id: 3, name: 'Dragon Steel Corp', region: 'Asia Pacific', country: 'China', tier: 'T1', category: 'Raw Materials', contractValue: '$5.1M', lat: 31.23, lng: 121.47,
-    params: { OnTime_Delivery: 60, Defect_Rate_PPM: 4900, Field_Failure_Rate: 3.0, Financial_Stability: 40, Inspection_Pass_Rate: 75, Avg_Lead_Time: 30, Shipment_Accuracy: 80, Audit_Score: 48, Capacity_Utilization: 95, GPR_Score: 75 }},
-  { id: 4, name: 'Pacific Raw Materials', region: 'Asia Pacific', country: 'Indonesia', tier: 'T1', category: 'Raw Materials', contractValue: '$2.1M', lat: -6.21, lng: 106.85,
-    params: { OnTime_Delivery: 68, Defect_Rate_PPM: 3800, Field_Failure_Rate: 2.4, Financial_Stability: 52, Inspection_Pass_Rate: 83, Avg_Lead_Time: 22, Shipment_Accuracy: 86, Audit_Score: 55, Capacity_Utilization: 85, GPR_Score: 65 }},
-  { id: 5, name: 'GlobalTech Solutions', region: 'North America', country: 'USA', tier: 'T1', category: 'Technology', contractValue: '$6.5M', lat: 37.77, lng: -122.42,
-    params: { OnTime_Delivery: 71, Defect_Rate_PPM: 2800, Field_Failure_Rate: 1.8, Financial_Stability: 58, Inspection_Pass_Rate: 87, Avg_Lead_Time: 14, Shipment_Accuracy: 89, Audit_Score: 68, Capacity_Utilization: 78, GPR_Score: 25 }},
-  { id: 6, name: 'Cairo Textiles', region: 'Africa', country: 'Egypt', tier: 'T3', category: 'Textiles', contractValue: '$1.2M', lat: 30.04, lng: 31.24,
-    params: { OnTime_Delivery: 70, Defect_Rate_PPM: 3500, Field_Failure_Rate: 2.2, Financial_Stability: 55, Inspection_Pass_Rate: 80, Avg_Lead_Time: 20, Shipment_Accuracy: 84, Audit_Score: 50, Capacity_Utilization: 82, GPR_Score: 68 }},
-  { id: 7, name: 'Atlas Logistics Ltd.', region: 'Middle East', country: 'UAE', tier: 'T2', category: 'Logistics', contractValue: '$3.0M', lat: 25.20, lng: 55.27,
-    params: { OnTime_Delivery: 74, Defect_Rate_PPM: 2100, Field_Failure_Rate: 1.5, Financial_Stability: 61, Inspection_Pass_Rate: 88, Avg_Lead_Time: 12, Shipment_Accuracy: 90, Audit_Score: 65, Capacity_Utilization: 75, GPR_Score: 55 }},
-  { id: 8, name: 'Nordic Supply Chain', region: 'Europe', country: 'Sweden', tier: 'T1', category: 'Logistics', contractValue: '$4.8M', lat: 59.33, lng: 18.07,
-    params: { OnTime_Delivery: 88, Defect_Rate_PPM: 1200, Field_Failure_Rate: 0.8, Financial_Stability: 76, Inspection_Pass_Rate: 94, Avg_Lead_Time: 8, Shipment_Accuracy: 95, Audit_Score: 82, Capacity_Utilization: 68, GPR_Score: 12 }},
-  { id: 9, name: 'EuroComponents GmbH', region: 'Europe', country: 'Germany', tier: 'T1', category: 'Electronics', contractValue: '$5.5M', lat: 48.14, lng: 11.58,
-    params: { OnTime_Delivery: 92, Defect_Rate_PPM: 800, Field_Failure_Rate: 0.5, Financial_Stability: 82, Inspection_Pass_Rate: 96, Avg_Lead_Time: 6, Shipment_Accuracy: 97, Audit_Score: 88, Capacity_Utilization: 65, GPR_Score: 8 }},
-  { id: 10, name: 'TechFusion Inc.', region: 'North America', country: 'Canada', tier: 'T2', category: 'Technology', contractValue: '$2.8M', lat: 43.65, lng: -79.38,
-    params: { OnTime_Delivery: 95, Defect_Rate_PPM: 500, Field_Failure_Rate: 0.3, Financial_Stability: 88, Inspection_Pass_Rate: 97, Avg_Lead_Time: 5, Shipment_Accuracy: 98, Audit_Score: 92, Capacity_Utilization: 60, GPR_Score: 5 }},
-  { id: 11, name: 'Midwest Agriculture', region: 'North America', country: 'USA', tier: 'T2', category: 'Raw Materials', contractValue: '$1.9M', lat: 41.88, lng: -87.63,
-    params: { OnTime_Delivery: 90, Defect_Rate_PPM: 900, Field_Failure_Rate: 0.6, Financial_Stability: 80, Inspection_Pass_Rate: 93, Avg_Lead_Time: 7, Shipment_Accuracy: 94, Audit_Score: 85, Capacity_Utilization: 70, GPR_Score: 10 }},
-  { id: 12, name: 'Bangalore IT Services', region: 'Asia Pacific', country: 'India', tier: 'T2', category: 'Technology', contractValue: '$3.2M', lat: 12.97, lng: 77.59,
-    params: { OnTime_Delivery: 85, Defect_Rate_PPM: 1400, Field_Failure_Rate: 1.0, Financial_Stability: 70, Inspection_Pass_Rate: 90, Avg_Lead_Time: 10, Shipment_Accuracy: 91, Audit_Score: 75, Capacity_Utilization: 72, GPR_Score: 35 }},
-  { id: 13, name: 'SouthAm Chemicals', region: 'South America', country: 'Brazil', tier: 'T2', category: 'Chemicals', contractValue: '$2.4M', lat: -23.55, lng: -46.63,
-    params: { OnTime_Delivery: 80, Defect_Rate_PPM: 2200, Field_Failure_Rate: 1.6, Financial_Stability: 60, Inspection_Pass_Rate: 85, Avg_Lead_Time: 18, Shipment_Accuracy: 87, Audit_Score: 62, Capacity_Utilization: 78, GPR_Score: 42 }},
-  { id: 14, name: 'Istanbul Metals', region: 'Middle East', country: 'Turkey', tier: 'T2', category: 'Raw Materials', contractValue: '$1.8M', lat: 41.01, lng: 28.98,
-    params: { OnTime_Delivery: 72, Defect_Rate_PPM: 3100, Field_Failure_Rate: 2.0, Financial_Stability: 48, Inspection_Pass_Rate: 82, Avg_Lead_Time: 16, Shipment_Accuracy: 83, Audit_Score: 55, Capacity_Utilization: 80, GPR_Score: 62 }},
-  { id: 15, name: 'Lagos Polymers', region: 'Africa', country: 'Nigeria', tier: 'T3', category: 'Chemicals', contractValue: '$0.9M', lat: 6.52, lng: 3.38,
-    params: { OnTime_Delivery: 65, Defect_Rate_PPM: 4500, Field_Failure_Rate: 2.6, Financial_Stability: 38, Inspection_Pass_Rate: 72, Avg_Lead_Time: 25, Shipment_Accuracy: 76, Audit_Score: 40, Capacity_Utilization: 88, GPR_Score: 70 }},
 ];
 
 // ── Global Event Catalog ────────────────────────────────────────
@@ -116,20 +120,20 @@ export const regionConfig = {
   'Global': { color: '#6366F1', abbr: 'ALL' },
 };
 
-// ── Network Graph ───────────────────────────────────────────────
+// ── Network Graph (static subset) ──────────────────────────────
 export const networkNodes = [
   { id: 'you', label: 'Your Org', x: 400, y: 260, size: 28, tier: 0 },
-  { id: 'v1', label: 'Shenzhen Elec.', x: 120, y: 100, size: 22, tier: 1, vendorId: 1 },
-  { id: 'v2', label: 'Apex Mfg.', x: 200, y: 380, size: 22, tier: 1, vendorId: 2 },
-  { id: 'v3', label: 'Dragon Steel', x: 80, y: 260, size: 20, tier: 1, vendorId: 3 },
-  { id: 'v8', label: 'Nordic Supply', x: 620, y: 100, size: 20, tier: 1, vendorId: 8 },
-  { id: 'v9', label: 'EuroComp.', x: 700, y: 260, size: 20, tier: 1, vendorId: 9 },
-  { id: 'v5', label: 'GlobalTech', x: 550, y: 420, size: 18, tier: 1, vendorId: 5 },
-  { id: 'v7', label: 'Atlas Logistics', x: 300, y: 80, size: 16, tier: 2, vendorId: 7 },
-  { id: 'v12', label: 'Bangalore IT', x: 250, y: 460, size: 16, tier: 2, vendorId: 12 },
-  { id: 'v6', label: 'Cairo Textiles', x: 500, y: 160, size: 14, tier: 2, vendorId: 6 },
-  { id: 'v14', label: 'Istanbul Met.', x: 380, y: 440, size: 14, tier: 2, vendorId: 14 },
-  { id: 'v15', label: 'Lagos Poly.', x: 680, y: 400, size: 14, tier: 3, vendorId: 15 },
+  { id: 'v1', label: 'Vendor #1', x: 120, y: 100, size: 22, tier: 1, vendorId: 1 },
+  { id: 'v2', label: 'Vendor #2', x: 200, y: 380, size: 22, tier: 1, vendorId: 2 },
+  { id: 'v3', label: 'Vendor #3', x: 80, y: 260, size: 20, tier: 1, vendorId: 3 },
+  { id: 'v8', label: 'Vendor #8', x: 620, y: 100, size: 20, tier: 1, vendorId: 8 },
+  { id: 'v9', label: 'Vendor #9', x: 700, y: 260, size: 20, tier: 1, vendorId: 9 },
+  { id: 'v5', label: 'Vendor #5', x: 550, y: 420, size: 18, tier: 1, vendorId: 5 },
+  { id: 'v7', label: 'Vendor #7', x: 300, y: 80, size: 16, tier: 2, vendorId: 7 },
+  { id: 'v12', label: 'Vendor #12', x: 250, y: 460, size: 16, tier: 2, vendorId: 12 },
+  { id: 'v6', label: 'Vendor #6', x: 500, y: 160, size: 14, tier: 2, vendorId: 6 },
+  { id: 'v14', label: 'Vendor #14', x: 380, y: 440, size: 14, tier: 2, vendorId: 14 },
+  { id: 'v15', label: 'Vendor #15', x: 680, y: 400, size: 14, tier: 3, vendorId: 15 },
 ];
 
 export const networkEdges = [
@@ -146,12 +150,12 @@ export const networkEdges = [
 export const auditLogs = [
   { id: 1, timestamp: '14:23:01', user: 'admin@vendoriq.com', action: 'Weight Update', resource: 'GPR_Score → 25%', status: 'success', ip: '192.168.1.10' },
   { id: 2, timestamp: '14:18:45', user: 'analyst@vendoriq.com', action: 'Event Injected', resource: 'Red Sea Disruption', status: 'success', ip: '192.168.1.22' },
-  { id: 3, timestamp: '14:15:30', user: 'system', action: 'Recalculation', resource: '15 vendors rescored', status: 'success', ip: '10.0.0.1' },
+  { id: 3, timestamp: '14:15:30', user: 'system', action: 'Recalculation', resource: '5000 vendors rescored', status: 'success', ip: '10.0.0.1' },
   { id: 4, timestamp: '14:10:12', user: 'admin@vendoriq.com', action: 'Profile Switch', resource: 'Crisis Response', status: 'success', ip: '192.168.1.10' },
   { id: 5, timestamp: '13:55:00', user: 'analyst@vendoriq.com', action: 'Export Report', resource: 'Q1 Risk Assessment', status: 'success', ip: '192.168.1.22' },
-  { id: 6, timestamp: '13:42:18', user: 'system', action: 'Alert Triggered', resource: 'Shenzhen Electronics → Critical', status: 'warning', ip: '10.0.0.1' },
+  { id: 6, timestamp: '13:42:18', user: 'system', action: 'Alert Triggered', resource: 'Vendor #1 → Critical', status: 'warning', ip: '10.0.0.1' },
   { id: 7, timestamp: '13:30:00', user: 'viewer@vendoriq.com', action: 'Login', resource: 'Dashboard Access', status: 'success', ip: '192.168.1.35' },
-  { id: 8, timestamp: '13:15:44', user: 'system', action: 'Threshold Breach', resource: 'Dragon Steel GPR > 70', status: 'warning', ip: '10.0.0.1' },
+  { id: 8, timestamp: '13:15:44', user: 'system', action: 'Threshold Breach', resource: 'Vendor #3 GPR > 70', status: 'warning', ip: '10.0.0.1' },
 ];
 
 // ── Scoring Utilities ───────────────────────────────────────────
@@ -171,7 +175,7 @@ export function calcVendorScore(vendor, weights, activeEvents = []) {
     if (matchesRegion) {
       Object.entries(evt.impacts).forEach(([param, multiplier]) => {
         if (modifiedParams[param] !== undefined) {
-          if (parameterConfig[param].invert) {
+          if (parameterConfig[param]?.invert) {
             modifiedParams[param] = modifiedParams[param] * (multiplier < 1 ? multiplier : 1 / multiplier);
           } else {
             modifiedParams[param] = modifiedParams[param] * multiplier;
@@ -184,10 +188,11 @@ export function calcVendorScore(vendor, weights, activeEvents = []) {
   let score = 0;
   const contributions = {};
   Object.entries(weights).forEach(([param, weight]) => {
-    const normalized = normalizeParam(param, modifiedParams[param] ?? vendor.params[param]);
+    const rawVal = modifiedParams[param] ?? vendor.params[param] ?? 50;
+    const normalized = normalizeParam(param, rawVal);
     const contribution = (normalized * weight) / totalWeight;
     score += contribution;
-    contributions[param] = { normalized: Math.round(normalized), weight, contribution: Math.round(contribution * 10) / 10, raw: modifiedParams[param] ?? vendor.params[param] };
+    contributions[param] = { normalized: Math.round(normalized), weight, contribution: Math.round(contribution * 10) / 10, raw: rawVal };
   });
   return { score: Math.round(Math.min(99, Math.max(1, score))), contributions, modifiedParams };
 }
@@ -204,4 +209,14 @@ export function getRiskColor(score) {
   if (score >= 55) return '#EA580C';
   if (score >= 35) return '#D97706';
   return '#059669';
+}
+
+// ── Category helpers ────────────────────────────────────────────
+export function getParamsByCategory() {
+  const cats = {};
+  Object.entries(parameterConfig).forEach(([key, cfg]) => {
+    if (!cats[cfg.category]) cats[cfg.category] = [];
+    cats[cfg.category].push({ key, ...cfg });
+  });
+  return cats;
 }
