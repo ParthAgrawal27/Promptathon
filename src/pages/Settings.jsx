@@ -1,40 +1,87 @@
-import { useState } from 'react';
+import { useRiskEngine } from '../context/RiskEngine';
+import { useTheme } from '../context/ThemeContext';
+import { riskProfiles, parameterConfig } from '../data/mockData';
 import './Settings.css';
 
 export default function Settings() {
-  const [activeTab, setActiveTab] = useState('general');
-
-  const tabs = ['general', 'users', 'roles', 'api', 'model', 'notifications'];
+  const { weights, activeProfile, applyProfile, activeEvents, clearEvents, stats } = useRiskEngine();
+  const { theme, toggleTheme, isDark } = useTheme();
 
   return (
     <div className="settings-page animate-fade-in">
       <div className="page-header">
         <div>
-          <h1>Settings & Access Control</h1>
-          <p>System configuration, user management, and API settings</p>
+          <h1>Settings</h1>
+          <p>Risk framework profiles · Appearance · System configuration · Platform preferences</p>
         </div>
       </div>
 
-      <div className="tabs">
-        {tabs.map(tab => (
-          <button key={tab} className={`tab ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
-        ))}
-      </div>
+      <div className="settings-layout">
+        {/* Main column */}
+        <div className="settings-main">
 
-      {activeTab === 'general' && (
-        <div className="settings-grid">
+          {/* Appearance */}
           <div className="card">
-            <div className="card-header"><span className="card-title">General Settings</span></div>
+            <div className="card-header">
+              <span className="card-title">🎨 Appearance</span>
+              <span className="badge info">{isDark ? 'Dark Mode' : 'Light Mode'}</span>
+            </div>
             <div className="settings-form">
               <div className="setting-row">
                 <div className="setting-info">
                   <span className="setting-label">Dark Mode</span>
-                  <span className="setting-desc">Use dark theme across the application</span>
+                  <span className="setting-desc">Switch between light and dark theme across the entire application</span>
                 </div>
-                <input type="checkbox" className="toggle" defaultChecked />
+                <label className="theme-toggle-wrapper">
+                  <input
+                    type="checkbox"
+                    className="toggle"
+                    checked={isDark}
+                    onChange={toggleTheme}
+                  />
+                  <span className="theme-toggle-status">{isDark ? '🌙 Dark' : '☀️ Light'}</span>
+                </label>
               </div>
+            </div>
+          </div>
+
+          {/* Risk Framework Profiles */}
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title">⚖ Risk Framework Profiles</span>
+              <span className="badge info">Active: {riskProfiles.find(p => p.id === activeProfile)?.name || 'Custom'}</span>
+            </div>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginBottom: 'var(--space-4)' }}>
+              Switch between risk assessment frameworks. Each profile reconfigures parameter weights to match different enterprise priorities.
+              Rankings, decision trees, and alerts recalculate instantly.
+            </p>
+            <div className="st-profiles-grid">
+              {riskProfiles.map(p => (
+                <div key={p.id} className={`st-profile-card ${activeProfile === p.id ? 'active' : ''}`}
+                  onClick={() => applyProfile(p.id)}>
+                  <div className="st-profile-header">
+                    <span className="st-profile-icon">{p.icon}</span>
+                    <span className="st-profile-name">{p.name}</span>
+                    {activeProfile === p.id && <span className="badge low" style={{ fontSize: '9px' }}>Active</span>}
+                  </div>
+                  <p className="st-profile-desc">{p.desc}</p>
+                  <div className="st-profile-weights">
+                    {Object.entries(p.weights).sort(([,a],[,b]) => b - a).slice(0, 4).map(([key, val]) => (
+                      <div key={key} className="st-pw-row">
+                        <span>{parameterConfig[key]?.icon} {parameterConfig[key]?.label}</span>
+                        <span className="font-mono">{val}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* General Settings */}
+          <div className="card">
+            <div className="card-header"><span className="card-title">⚙ General Settings</span></div>
+            <div className="settings-form">
               <div className="setting-row">
                 <div className="setting-info">
                   <span className="setting-label">Real-Time Updates</span>
@@ -44,8 +91,8 @@ export default function Settings() {
               </div>
               <div className="setting-row">
                 <div className="setting-info">
-                  <span className="setting-label">AI Auto-Analysis</span>
-                  <span className="setting-desc">Automatically run AI analysis on new vendor data</span>
+                  <span className="setting-label">Analytical Auto-Scoring</span>
+                  <span className="setting-desc">Automatically run heuristic analysis on new vendor data</span>
                 </div>
                 <input type="checkbox" className="toggle" defaultChecked />
               </div>
@@ -70,128 +117,43 @@ export default function Settings() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="settings-sidebar">
+          <div className="card">
+            <div className="card-header"><span className="card-title">System Status</span></div>
+            <div className="st-status-rows">
+              <div className="st-status-row"><span>Risk Engine</span><span className="badge low">Active</span></div>
+              <div className="st-status-row"><span>Theme</span><span className="font-mono">{isDark ? 'Dark' : 'Light'}</span></div>
+              <div className="st-status-row"><span>Vendors Monitored</span><span className="font-mono">{stats.total}</span></div>
+              <div className="st-status-row"><span>Active Events</span><span className="font-mono">{activeEvents.length}</span></div>
+              <div className="st-status-row"><span>Active Profile</span><span className="font-mono">{activeProfile}</span></div>
+              <div className="st-status-row"><span>Weight Total</span><span className="font-mono">{Object.values(weights).reduce((a,b)=>a+b,0)}%</span></div>
+              <div className="st-status-row"><span>Critical Vendors</span><span className="font-mono" style={{ color: 'var(--color-danger)' }}>{stats.critical}</span></div>
+            </div>
+          </div>
 
           <div className="card">
-            <div className="card-header"><span className="card-title">Risk Thresholds</span></div>
-            <div className="settings-form">
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">Critical Threshold</span>
-                  <span className="setting-desc">Score above which vendors are marked Critical</span>
-                </div>
-                <input type="number" defaultValue={75} style={{ width: 80, textAlign: 'center' }} />
-              </div>
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">High Threshold</span>
-                  <span className="setting-desc">Score above which vendors are marked High Risk</span>
-                </div>
-                <input type="number" defaultValue={50} style={{ width: 80, textAlign: 'center' }} />
-              </div>
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">Moderate Threshold</span>
-                  <span className="setting-desc">Score above which vendors are marked Moderate</span>
-                </div>
-                <input type="number" defaultValue={25} style={{ width: 80, textAlign: 'center' }} />
-              </div>
-            </div>
-            <div style={{ padding: 'var(--space-4)', borderTop: '1px solid var(--border-default)' }}>
-              <button className="btn btn-primary btn-sm">Save Changes</button>
+            <div className="card-header"><span className="card-title">Quick Actions</span></div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+              <button className="btn btn-primary btn-sm" onClick={() => applyProfile('balanced')}>Reset to Balanced Profile</button>
+              <button className="btn btn-danger btn-sm" onClick={clearEvents}>Clear All Events</button>
+              <button className="btn btn-ghost btn-sm" onClick={() => applyProfile('crisis')}>🚨 Activate Crisis Mode</button>
             </div>
           </div>
-        </div>
-      )}
 
-      {activeTab === 'users' && (
-        <div className="card">
-          <div className="card-header">
-            <span className="card-title">User Management</span>
-            <button className="btn btn-primary btn-sm">+ Invite User</button>
-          </div>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Last Active</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                { name: 'Parth K.', email: 'admin@vendoriq.com', role: 'Admin', status: 'Active', last: '2 min ago' },
-                { name: 'Sarah M.', email: 'analyst@vendoriq.com', role: 'Analyst', status: 'Active', last: '15 min ago' },
-                { name: 'James L.', email: 'viewer@vendoriq.com', role: 'Viewer', status: 'Inactive', last: '3 days ago' },
-              ].map((user, i) => (
-                <tr key={i}>
-                  <td><span style={{ fontWeight: 600 }}>{user.name}</span></td>
-                  <td>{user.email}</td>
-                  <td><span className={`badge ${user.role === 'Admin' ? 'critical' : user.role === 'Analyst' ? 'info' : 'low'}`}>{user.role}</span></td>
-                  <td><span style={{ color: user.status === 'Active' ? 'var(--color-success)' : 'var(--text-tertiary)' }}>● {user.status}</span></td>
-                  <td><span style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-xs)' }}>{user.last}</span></td>
-                  <td><button className="btn btn-ghost btn-sm">Edit</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {activeTab === 'model' && (
-        <div className="settings-grid">
           <div className="card">
-            <div className="card-header"><span className="card-title">AI Model Configuration</span></div>
-            <div className="settings-form">
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">Active Model</span>
-                  <span className="setting-desc">The machine learning model used for risk scoring</span>
-                </div>
-                <select defaultValue="v3.2" style={{ width: 160 }}>
-                  <option value="v3.2">Risk Engine v3.2</option>
-                  <option value="v3.1">Risk Engine v3.1</option>
-                  <option value="v3.0">Risk Engine v3.0</option>
-                </select>
-              </div>
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">Confidence Threshold</span>
-                  <span className="setting-desc">Minimum confidence level before flagging for human review</span>
-                </div>
-                <input type="number" defaultValue={60} style={{ width: 80, textAlign: 'center' }} />
-              </div>
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">Enable SHAP Explanations</span>
-                  <span className="setting-desc">Compute feature attributions for all predictions</span>
-                </div>
-                <input type="checkbox" className="toggle" defaultChecked />
-              </div>
-              <div className="setting-row">
-                <div className="setting-info">
-                  <span className="setting-label">Guardrails</span>
-                  <span className="setting-desc">Prevent model from making high-impact decisions without approval</span>
-                </div>
-                <input type="checkbox" className="toggle" defaultChecked />
-              </div>
+            <div className="card-header"><span className="card-title">Platform Information</span></div>
+            <div className="st-status-rows">
+              <div className="st-status-row"><span>Platform</span><span>VendorIQ v2.0</span></div>
+              <div className="st-status-row"><span>Engine</span><span>Heuristic Analytics</span></div>
+              <div className="st-status-row"><span>Approach</span><span>Rule-Based Scoring</span></div>
+              <div className="st-status-row"><span>Architecture</span><span>React + Vite</span></div>
             </div>
           </div>
         </div>
-      )}
-
-      {!['general', 'users', 'model'].includes(activeTab) && (
-        <div className="card" style={{ padding: 'var(--space-12)', textAlign: 'center' }}>
-          <p style={{ color: 'var(--text-tertiary)', fontSize: 'var(--text-md)' }}>
-            {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} settings configuration
-          </p>
-          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--text-sm)', marginTop: 'var(--space-2)' }}>
-            This section is available in the full enterprise version.
-          </p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

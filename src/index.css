@@ -101,6 +101,41 @@
   --content-max-width: 1600px;
 }
 
+/* ── Dark Theme Override ─────────────────────────────────────── */
+[data-theme="dark"] {
+  --bg-base: #0B1120;
+  --bg-surface: #111827;
+  --bg-card: #1E293B;
+  --bg-card-hover: #263548;
+  --bg-elevated: #1E293B;
+  --bg-input: #1E293B;
+
+  --border-default: #334155;
+  --border-hover: #475569;
+  --border-active: rgba(59, 130, 246, 0.5);
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #CBD5E1;
+  --text-tertiary: #94A3B8;
+  --text-muted: #64748B;
+  --text-inverse: #0F172A;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow-primary: 0 0 20px rgba(59, 130, 246, 0.2);
+  --shadow-glow-danger: 0 0 20px rgba(239, 68, 68, 0.2);
+  --shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.2);
+}
+
+/* Dark scrollbars */
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+  background: #64748B;
+}
+
 /* ── Reset & Base ──────────────────────────────────────────────── */
 *, *::before, *::after {
   margin: 0;
@@ -764,3 +799,116 @@ input:focus, select:focus, textarea:focus {
   background: var(--border-default);
   margin: var(--space-4) 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   Dark Mode Overrides for hardcoded component colors
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Card and nested surfaces */
+[data-theme="dark"] .card {
+  background: var(--bg-card);
+  border-color: var(--border-default);
+}
+
+/* KPI cards */
+[data-theme="dark"] .kpi-card {
+  background: var(--bg-card);
+}
+
+/* Progress bars */
+[data-theme="dark"] .progress-bar {
+  background: #1E293B;
+}
+
+/* Data table */
+[data-theme="dark"] .data-table th {
+  background: #111827;
+  color: var(--text-secondary);
+  border-color: var(--border-default);
+}
+[data-theme="dark"] .data-table td {
+  border-color: var(--border-default);
+}
+[data-theme="dark"] .data-table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+/* Notification dot border */
+[data-theme="dark"] .notification-dot {
+  border-color: var(--bg-card);
+}
+
+/* Toggle switch track */
+[data-theme="dark"] .toggle:not(:checked) {
+  background: #475569;
+}
+
+/* Tabs */
+[data-theme="dark"] .tab {
+  color: var(--text-tertiary);
+}
+[data-theme="dark"] .tab.active {
+  color: var(--color-primary);
+}
+
+/* Badges on dark */
+[data-theme="dark"] .badge {
+  border-color: transparent;
+}
+
+/* ── Page-Level Dark Overrides ─────────────────────────────── */
+
+/* Executive Overview */
+[data-theme="dark"] .dt-node { background: #111827; border-color: #334155; }
+[data-theme="dark"] .dt-rule { background: #111827; border-color: #334155; }
+[data-theme="dark"] .risk-vendor-row:hover { background: rgba(255,255,255,0.04); }
+
+/* Weight Engine */
+[data-theme="dark"] .we-slider-label .font-mono { background: #111827; }
+[data-theme="dark"] .we-dom-bar-bg,
+[data-theme="dark"] .we-rank-bar-bg { background: #111827; }
+
+/* Vendor Intelligence */
+[data-theme="dark"] .filter-pill { background: #1E293B; border-color: #334155; color: var(--text-secondary); }
+[data-theme="dark"] .filter-pill.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+[data-theme="dark"] .score-bar-bg { background: #111827; }
+
+/* Vendor Profile */
+[data-theme="dark"] .vp-wf-bar-area { background: #111827; }
+
+/* AI Assistant */
+[data-theme="dark"] .chat-bubble.assistant .chat-text { background: #111827; }
+[data-theme="dark"] .quick-query-btn { background: #111827; border-color: #334155; color: var(--text-secondary); }
+[data-theme="dark"] .quick-query-btn:hover { border-color: #475569; background: #1E293B; }
+[data-theme="dark"] .chat-input-area { border-color: #334155; }
+
+/* Smart Alerts */
+[data-theme="dark"] .sa-impact-chip { background: #111827; }
+
+/* Vendor Comparison */
+[data-theme="dark"] .vc-chip { background: #1E293B; border-color: #334155; }
+[data-theme="dark"] .vc-chip.active { background: rgba(37,99,235,0.12); }
+[data-theme="dark"] .vc-param-bar-bg { background: #111827; }
+
+/* Simulation Lab */
+[data-theme="dark"] .sim-scenario-btn { background: #1E293B; border-color: #334155; }
+[data-theme="dark"] .sim-scenario-btn.active { background: rgba(220,38,38,0.08); }
+
+/* Security Audit */
+[data-theme="dark"] .sa-v-bar-bg { background: #111827; }
+
+/* Global Events */
+[data-theme="dark"] .ge-event-card { background: var(--bg-card); }
+[data-theme="dark"] .ge-impact-row { border-color: #334155; }
+
+/* Geo Intelligence - map already uses dark background */
+
+/* SVG dark overrides for flow diagrams */
+[data-theme="dark"] .sim-svg rect:first-child { fill: #111827 !important; }
+[data-theme="dark"] .cr-svg rect:first-child { fill: #0B1120 !important; }
+
+/* Button variants */
+[data-theme="dark"] .btn-ghost { color: var(--text-secondary); }
+[data-theme="dark"] .btn-ghost:hover { background: rgba(255,255,255,0.06); }
+[data-theme="dark"] .btn-danger { background: var(--color-danger); color: white; }
+
