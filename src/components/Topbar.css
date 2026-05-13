@@ -273,3 +273,22 @@
   color: var(--text-tertiary);
   line-height: 1.2;
 }
+
+/* ── Dark Mode ─── */
+[data-theme="dark"] .topbar {
+  background: rgba(17, 24, 39, 0.88);
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .topbar-search {
+  background: #1E293B;
+  border-color: #334155;
+}
+[data-theme="dark"] .topbar-search:focus-within {
+  background: #111827;
+}
+[data-theme="dark"] .kbd-hint {
+  background: #334155;
+  border-color: #475569;
+  color: var(--text-tertiary);
+}
+

@@ -1,128 +1,90 @@
+import { useRiskEngine } from '../context/RiskEngine';
 import { auditLogs } from '../data/mockData';
 import './SecurityAudit.css';
 
 export default function SecurityAudit() {
+  const { scoredVendors, activeEvents, stats } = useRiskEngine();
+
+  const complianceRate = Math.round(scoredVendors.filter(v => v.params.Audit_Score >= 60).length / scoredVendors.length * 100);
+  const avgAudit = Math.round(scoredVendors.reduce((a, v) => a + v.params.Audit_Score, 0) / scoredVendors.length);
+
   return (
     <div className="security-audit animate-fade-in">
       <div className="page-header">
         <div>
-          <h1>System Security & Audit Logs</h1>
-          <p>Security operations center · Real-time monitoring & compliance audit trail</p>
-        </div>
-        <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <button className="btn btn-ghost btn-sm">Export Logs</button>
-          <button className="btn btn-primary btn-sm">Security Scan</button>
+          <h1>Security & Audit</h1>
+          <p>Compliance tracking · Audit logs · System integrity · Access control</p>
         </div>
       </div>
 
-      {/* Status Cards */}
-      <div className="grid-4" style={{ marginBottom: 'var(--space-4)' }}>
+      <div className="grid-4">
         <div className="kpi-card success">
-          <span className="kpi-label">System Status</span>
-          <span className="kpi-value" style={{ color: 'var(--color-success)', fontSize: 'var(--text-xl)' }}>● Operational</span>
-          <span className="kpi-trend up">99.97% uptime</span>
+          <span className="kpi-label">Compliance Rate</span>
+          <span className="kpi-value font-mono" style={{ color: 'var(--color-success)' }}>{complianceRate}%</span>
+          <div className="progress-bar"><div className="fill" style={{ width: `${complianceRate}%`, background: 'var(--color-success)' }}></div></div>
         </div>
         <div className="kpi-card info">
-          <span className="kpi-label">API Calls (24h)</span>
-          <span className="kpi-value" style={{ color: 'var(--color-primary)' }}>12.4K</span>
-          <span className="kpi-trend up">Within rate limits</span>
+          <span className="kpi-label">Avg Audit Score</span>
+          <span className="kpi-value font-mono" style={{ color: 'var(--color-primary)' }}>{avgAudit}</span>
         </div>
         <div className="kpi-card warning">
-          <span className="kpi-label">Guardrail Triggers</span>
-          <span className="kpi-value" style={{ color: 'var(--color-warning)' }}>2</span>
-          <span className="kpi-trend neutral">Last 24 hours</span>
+          <span className="kpi-label">Active Events</span>
+          <span className="kpi-value font-mono" style={{ color: 'var(--color-warning)' }}>{activeEvents.length}</span>
         </div>
         <div className="kpi-card danger">
-          <span className="kpi-label">Failed Logins</span>
-          <span className="kpi-value" style={{ color: 'var(--color-danger)' }}>1</span>
-          <span className="kpi-trend neutral">Blocked automatically</span>
+          <span className="kpi-label">Non-Compliant</span>
+          <span className="kpi-value font-mono" style={{ color: 'var(--color-danger)' }}>
+            {scoredVendors.filter(v => v.params.Audit_Score < 60).length}
+          </span>
         </div>
       </div>
 
-      <div className="sec-grid">
+      <div className="sa-layout">
         {/* Audit Log */}
-        <div className="card sec-log-card">
+        <div className="card">
           <div className="card-header">
-            <span className="card-title">Audit Trail</span>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>Live feed</span>
+            <span className="card-title">System Audit Log</span>
+            <span className="badge info">{auditLogs.length} entries</span>
           </div>
-          <div className="audit-log">
-            {auditLogs.map((log) => (
-              <div key={log.id} className={`log-entry ${log.status}`}>
-                <div className="log-status-dot"></div>
-                <span className="log-time font-mono">{log.timestamp}</span>
-                <span className="log-user">{log.user}</span>
-                <span className="log-action">{log.action}</span>
-                <span className="log-resource">{log.resource}</span>
-                <span className={`badge ${log.status === 'success' ? 'low' : log.status === 'warning' ? 'moderate' : 'critical'}`}>
-                  {log.status}
-                </span>
-                <span className="log-ip font-mono">{log.ip}</span>
-              </div>
-            ))}
+          <div className="table-scroll">
+            <table className="data-table">
+              <thead>
+                <tr><th>Time</th><th>User</th><th>Action</th><th>Resource</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                {auditLogs.map(log => (
+                  <tr key={log.id}>
+                    <td><span className="font-mono" style={{ fontSize: 'var(--text-xs)' }}>{log.timestamp}</span></td>
+                    <td style={{ fontSize: 'var(--text-xs)' }}>{log.user}</td>
+                    <td><span className="badge info" style={{ fontSize: '10px' }}>{log.action}</span></td>
+                    <td style={{ fontSize: 'var(--text-xs)' }}>{log.resource}</td>
+                    <td><span className={`badge ${log.status === 'success' ? 'low' : 'moderate'}`}>{log.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Security Metrics */}
-        <div className="sec-sidebar">
-          <div className="card">
-            <div className="card-header"><span className="card-title">Token Usage</span></div>
-            <div className="token-meter">
-              <div className="token-ring">
-                <svg viewBox="0 0 100 100" width="100" height="100">
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border-default)" strokeWidth="6" />
-                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-primary)" strokeWidth="6"
-                    strokeDasharray={2 * Math.PI * 42} strokeDashoffset={2 * Math.PI * 42 * 0.32}
-                    transform="rotate(-90 50 50)" strokeLinecap="round"
-                    style={{ filter: 'drop-shadow(0 0 4px rgba(59,130,246,0.4))' }}
-                  />
-                </svg>
-                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
-                  <div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-primary)' }}>68%</div>
-                  <div style={{ fontSize: '9px', color: 'var(--text-tertiary)' }}>USED</div>
+        {/* Vendor Compliance */}
+        <div className="card">
+          <div className="card-header"><span className="card-title">Vendor Audit Scores</span></div>
+          <div className="sa-vendor-list">
+            {scoredVendors.sort((a, b) => a.params.Audit_Score - b.params.Audit_Score).map(v => (
+              <div key={v.id} className="sa-vendor-row">
+                <span className="sa-v-name">{v.name}</span>
+                <div className="sa-v-bar-bg">
+                  <div className="sa-v-bar" style={{
+                    width: `${v.params.Audit_Score}%`,
+                    background: v.params.Audit_Score >= 80 ? 'var(--color-success)' : v.params.Audit_Score >= 60 ? 'var(--color-warning)' : 'var(--color-danger)'
+                  }}></div>
                 </div>
+                <span className="sa-v-score font-mono">{v.params.Audit_Score}</span>
+                <span className={`badge ${v.params.Audit_Score >= 60 ? 'low' : 'critical'}`} style={{ fontSize: '9px' }}>
+                  {v.params.Audit_Score >= 60 ? 'Pass' : 'Fail'}
+                </span>
               </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', textAlign: 'center', marginTop: 'var(--space-2)' }}>
-                680K / 1M tokens this billing cycle
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header"><span className="card-title">Active Sessions</span></div>
-            <div className="sessions-list">
-              {[
-                { user: 'admin@vendoriq.com', device: 'Chrome / Windows', status: 'active' },
-                { user: 'analyst@vendoriq.com', device: 'Firefox / macOS', status: 'active' },
-                { user: 'system', device: 'API Client', status: 'active' },
-              ].map((s, i) => (
-                <div key={i} className="session-item">
-                  <div className="session-dot active"></div>
-                  <div>
-                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 500 }}>{s.user}</div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)' }}>{s.device}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header"><span className="card-title">Network Status</span></div>
-            <div className="net-status">
-              {[
-                { name: 'Risk Engine API', status: 'healthy', latency: '12ms' },
-                { name: 'Data Pipeline', status: 'healthy', latency: '45ms' },
-                { name: 'ML Inference', status: 'healthy', latency: '120ms' },
-                { name: 'External Feeds', status: 'degraded', latency: '890ms' },
-              ].map((s, i) => (
-                <div key={i} className="net-item">
-                  <span className={`net-dot ${s.status}`}></span>
-                  <span className="net-name">{s.name}</span>
-                  <span className="net-latency font-mono">{s.latency}</span>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </div>
