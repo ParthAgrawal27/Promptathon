@@ -39,6 +39,8 @@ export default function Sidebar({ collapsed, onToggle }) {
             </div>
           )}
         </div>
+      </div>
+      <div className="sidebar-toggle-row">
         <button className="sidebar-toggle" onClick={onToggle} aria-label="Toggle sidebar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             {collapsed ? (

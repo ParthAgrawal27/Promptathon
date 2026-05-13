@@ -23,11 +23,23 @@
 /* ── Header ─── */
 .sidebar-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid #334155;
-  min-height: var(--topbar-height);
+}
+
+.expanded .sidebar-header {
+  align-items: stretch;
+}
+
+.expanded .sidebar-logo {
+  justify-content: flex-start;
+}
+
+.sidebar-toggle {
+  align-self: center;
 }
 
 .sidebar-logo {
