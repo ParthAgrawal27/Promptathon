@@ -1,13 +1,104 @@
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useRiskEngine } from '../context/RiskEngine';
 import { parameterConfig, getParamsByCategory } from '../data/mockData';
+import { askLLM } from '../services/llmService';
+import { buildVendorContext } from '../services/contextBuilder';
 import './VendorProfile.css';
+
+const QUICK_QUESTIONS = [
+  'Why is this vendor high risk?',
+  'Is it safe to place a large order?',
+  'What corrective actions should we take?',
+  'How does this vendor compare to a safe vendor?',
+];
 
 export default function VendorProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { scoredVendors, weights, activeEvents, loading } = useRiskEngine();
 
+  // AI Advisor state — all hooks must be declared before any early return
+  const [aiResponse, setAiResponse] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [customQuestion, setCustomQuestion] = useState('');
+  const [autoLoaded, setAutoLoaded] = useState(false);
+
+  // Derive vendor from scored list (safe even when loading)
+  const vendor = useMemo(() => {
+    if (loading || scoredVendors.length === 0) return null;
+    return scoredVendors.find(v => v.id === parseInt(id)) || scoredVendors[0];
+  }, [scoredVendors, id, loading]);
+
+  const cacheKey = vendor ? `vendoriq_ai_${vendor.vendorId}` : '';
+
+  // ── Auto-trigger for High/Critical vendors ────────────────────
+  useEffect(() => {
+    if (!vendor || autoLoaded) return;
+
+    const isHighRisk = vendor.riskBand === 'High' || vendor.riskBand === 'Critical';
+    if (!isHighRisk) { setAutoLoaded(true); return; }
+
+    // Check cache first
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { answer, ts } = JSON.parse(cached);
+        // Cache valid for 1 hour
+        if (Date.now() - ts < 3600000) {
+          setAiResponse(answer);
+          setAiQuestion('Auto-generated insight');
+          setAutoLoaded(true);
+          return;
+        }
+      }
+    } catch (e) { /* ignore */ }
+
+    setAutoLoaded(true);
+
+    // Fire the auto-question
+    const context = buildVendorContext(vendor, activeEvents);
+    const question = 'Summarize why this vendor is high risk and what immediate procurement action should be taken';
+
+    setAiLoading(true);
+    setAiQuestion(question);
+    askLLM(context, question).then(answer => {
+      setAiResponse(answer);
+      setAiLoading(false);
+      try { localStorage.setItem(cacheKey, JSON.stringify({ answer, ts: Date.now() })); } catch (e) { /* quota */ }
+    });
+  }, [vendor?.vendorId, autoLoaded]);
+
+  // Reset auto-load when vendor changes
+  useEffect(() => {
+    setAutoLoaded(false);
+    setAiResponse('');
+    setAiQuestion('');
+  }, [id]);
+
+  // ── AI Functions ──────────────────────────────────────────────
+  const askQuestion = useCallback(async (question) => {
+    if (!vendor) return;
+    setAiLoading(true);
+    setAiQuestion(question);
+    setAiResponse('');
+
+    const context = buildVendorContext(vendor, activeEvents);
+    const answer = await askLLM(context, question);
+
+    setAiResponse(answer);
+    setAiLoading(false);
+  }, [vendor, activeEvents]);
+
+  const handleCustomAsk = useCallback(() => {
+    if (customQuestion.trim()) {
+      askQuestion(customQuestion.trim());
+      setCustomQuestion('');
+    }
+  }, [customQuestion, askQuestion]);
+
+  // ── Early returns (AFTER all hooks) ───────────────────────────
   if (loading) {
     return (
       <div className="vendor-profile animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
@@ -19,7 +110,6 @@ export default function VendorProfile() {
     );
   }
 
-  const vendor = scoredVendors.find(v => v.id === parseInt(id)) || scoredVendors[0];
   if (!vendor) return <div>Vendor not found</div>;
 
   const sortedContributions = Object.entries(vendor.contributions)
@@ -129,6 +219,84 @@ export default function VendorProfile() {
               {affectedByEvents.length > 0 && <div className="vp-reason critical">⚡ Active disruptions modifying raw parameters for this region.</div>}
               {vendor.riskScore < 35 && <div className="vp-reason success">✅ Vendor within acceptable risk thresholds across all weighted parameters.</div>}
             </div>
+          </div>
+
+          {/* ═══ AI Procurement Advisor Card ═══ */}
+          <div className="card ai-advisor-card">
+            <div className="card-header">
+              <span className="card-title">
+                <span className="ai-advisor-icon">🤖</span> AI Procurement Advisor
+              </span>
+              <span className="badge info">Llama 3.1</span>
+            </div>
+
+            {/* Quick question buttons */}
+            <div className="ai-quick-questions">
+              {QUICK_QUESTIONS.map((q, i) => (
+                <button
+                  key={i}
+                  className="ai-quick-btn"
+                  onClick={() => askQuestion(q)}
+                  disabled={aiLoading}
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+
+            {/* Custom input */}
+            <div className="ai-input-row">
+              <input
+                type="text"
+                className="ai-input"
+                placeholder="Ask about this vendor's risk..."
+                value={customQuestion}
+                onChange={(e) => setCustomQuestion(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleCustomAsk()}
+                disabled={aiLoading}
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleCustomAsk}
+                disabled={aiLoading || !customQuestion.trim()}
+              >
+                Ask
+              </button>
+            </div>
+
+            {/* Loading state */}
+            {aiLoading && (
+              <div className="ai-loading">
+                <div className="ai-spinner"></div>
+                <span>Analyzing vendor risk data...</span>
+              </div>
+            )}
+
+            {/* Response display */}
+            {aiResponse && !aiLoading && (
+              <div className="ai-response-card">
+                <div className="ai-response-header">
+                  <span className="ai-response-label">🤖 AI Analysis</span>
+                  {aiQuestion && <span className="ai-response-q">{aiQuestion}</span>}
+                </div>
+                <div
+                  className="ai-response-text"
+                  dangerouslySetInnerHTML={{
+                    __html: aiResponse
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\n/g, '<br/>')
+                      .replace(/• /g, '&bull; ')
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Empty state */}
+            {!aiResponse && !aiLoading && (
+              <div className="ai-empty-state">
+                <p>Ask a question or click a quick action above to get AI-powered procurement insights for this vendor.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

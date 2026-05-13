@@ -1,12 +1,18 @@
 import { useState, useMemo } from 'react';
 import { useRiskEngine } from '../context/RiskEngine';
 import { parameterConfig } from '../data/mockData';
+import { askLLM } from '../services/llmService';
+import { buildComparisonContext } from '../services/contextBuilder';
 import './VendorComparison.css';
 
 export default function VendorComparison() {
-  const { scoredVendors, loading } = useRiskEngine();
+  const { scoredVendors, activeEvents, loading } = useRiskEngine();
   const [vendorAId, setVendorAId] = useState(null);
   const [vendorBId, setVendorBId] = useState(null);
+
+  // AI Analysis state
+  const [aiResponse, setAiResponse] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   // Default to first two once loaded
   const vendorA = scoredVendors.find(v => v.id === vendorAId) || scoredVendors[0];
@@ -67,6 +73,31 @@ export default function VendorComparison() {
     return { better, worse, diff };
   }, [vendorA, vendorB]);
 
+  // ── AI Analysis ───────────────────────────────────────────────
+  const handleAIAnalysis = async () => {
+    if (!vendorA || !vendorB) return;
+    setAiLoading(true);
+    setAiResponse('');
+
+    const context = buildComparisonContext(vendorA, vendorB, activeEvents);
+    const question = `Compare these two vendors and recommend which one the procurement team should prioritize for upcoming orders. Explain the key risk differences, strengths and weaknesses of each, and provide a clear recommendation with reasoning.`;
+    const answer = await askLLM(context, question);
+
+    setAiResponse(answer);
+    setAiLoading(false);
+  };
+
+  // Reset AI response when vendors change
+  const handleVendorAChange = (e) => {
+    setVendorAId(Number(e.target.value));
+    setAiResponse('');
+  };
+
+  const handleVendorBChange = (e) => {
+    setVendorBId(Number(e.target.value));
+    setAiResponse('');
+  };
+
   if (loading) {
     return (
       <div className="vendor-comparison animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
@@ -93,14 +124,14 @@ export default function VendorComparison() {
       <div className="comp-selectors card">
         <div className="comp-select-group">
           <label>Vendor A</label>
-          <select value={vendorA.id} onChange={(e) => setVendorAId(Number(e.target.value))}>
+          <select value={vendorA.id} onChange={handleVendorAChange}>
             {scoredVendors.map(v => <option key={v.id} value={v.id}>{v.name} ({v.vendorId})</option>)}
           </select>
         </div>
         <div className="comp-vs">VS</div>
         <div className="comp-select-group">
           <label>Vendor B</label>
-          <select value={vendorB.id} onChange={(e) => setVendorBId(Number(e.target.value))}>
+          <select value={vendorB.id} onChange={handleVendorBChange}>
             {scoredVendors.map(v => <option key={v.id} value={v.id}>{v.name} ({v.vendorId})</option>)}
           </select>
         </div>
@@ -200,6 +231,43 @@ export default function VendorComparison() {
                 and a financial stability of {recommendation.better.params.Financial_Stability?.toFixed(0)}/100.
                 Consider prioritizing this vendor for critical supply chain operations.
               </p>
+            )}
+          </div>
+
+          {/* ═══ AI Analysis Section ═══ */}
+          <div className="divider"></div>
+          <div className="comp-ai-llm">
+            <span className="card-title" style={{ marginBottom: 'var(--space-2)', display: 'block' }}>
+              🤖 AI-Powered Analysis
+            </span>
+            <button
+              className={`btn ${aiLoading ? 'btn-ghost' : 'btn-primary'}`}
+              onClick={handleAIAnalysis}
+              disabled={aiLoading}
+              style={{ marginBottom: 'var(--space-3)', width: '100%' }}
+            >
+              {aiLoading ? (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', justifyContent: 'center' }}>
+                  <span className="comp-ai-spinner"></span>
+                  Analyzing with Llama 3.1...
+                </span>
+              ) : (
+                '🤖 Get AI Analysis'
+              )}
+            </button>
+
+            {aiResponse && (
+              <div className="comp-ai-response">
+                <div
+                  className="comp-ai-response-text"
+                  dangerouslySetInnerHTML={{
+                    __html: aiResponse
+                      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                      .replace(/\n/g, '<br/>')
+                      .replace(/• /g, '&bull; ')
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>

@@ -108,6 +108,49 @@
   padding-top: var(--space-2);
 }
 
+/* ═══ AI LLM Analysis ═══ */
+.comp-ai-llm {
+  padding-top: var(--space-2);
+}
+
+.comp-ai-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: comp-ai-spin 0.8s linear infinite;
+}
+
+.btn-ghost .comp-ai-spinner {
+  border-color: var(--border-default);
+  border-top-color: var(--color-primary);
+}
+
+@keyframes comp-ai-spin {
+  to { transform: rotate(360deg); }
+}
+
+.comp-ai-response {
+  background: rgba(37, 99, 235, 0.03);
+  border: 1px solid rgba(37, 99, 235, 0.12);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  animation: fade-in 0.3s ease-out;
+}
+
+.comp-ai-response-text {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.comp-ai-response-text strong {
+  color: var(--text-primary);
+}
+
 @media (max-width: 1200px) {
   .comp-grid { grid-template-columns: 1fr; }
 }
