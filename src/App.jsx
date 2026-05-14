@@ -8,7 +8,7 @@ import VendorIntelligence from './pages/VendorIntelligence';
 import VendorProfile from './pages/VendorProfile';
 import WeightEngine from './pages/WeightEngine';
 import GlobalEvents from './pages/GlobalEvents';
-import SimulationLab from './pages/SimulationLab';
+
 import ChainReaction from './pages/ChainReaction';
 import AIAssistant from './pages/AIAssistant';
 import SmartAlerts from './pages/SmartAlerts';
@@ -36,7 +36,7 @@ export default function App() {
               <Route path="/vendor/:id" element={<VendorProfile />} />
               <Route path="/weights" element={<WeightEngine />} />
               <Route path="/events" element={<GlobalEvents />} />
-              <Route path="/simulation" element={<SimulationLab />} />
+
               <Route path="/network" element={<ChainReaction />} />
               <Route path="/assistant" element={<AIAssistant />} />
               <Route path="/alerts" element={<SmartAlerts />} />

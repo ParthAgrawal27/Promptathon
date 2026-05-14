@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRiskEngine } from '../context/RiskEngine';
 import { networkNodes, networkEdges, getRiskColor } from '../data/mockData';
+import { askLLM } from '../services/llmService';
 import './ChainReaction.css';
 
 export default function ChainReaction() {
   const { scoredVendors, activeEvents } = useRiskEngine();
   const [selectedNode, setSelectedNode] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
+  const [llmExplanation, setLlmExplanation] = useState('');
+  const [llmLoading, setLlmLoading] = useState(false);
 
   const getNodeRisk = (node) => {
     if (node.id === 'you') return 0;
@@ -30,6 +33,56 @@ export default function ChainReaction() {
   const activeNode = (selectedNode || hoveredNode) ? networkNodes.find(n => n.id === (selectedNode || hoveredNode)) : null;
   const activeVendor = activeNode?.vendorId ? scoredVendors.find(v => v.id === activeNode.vendorId) : null;
 
+  // Build network context for LLM
+  const buildNetworkContext = useCallback(() => {
+    const criticalNodes = networkNodes.filter(n => getNodeRisk(n) >= 75);
+    const highNodes = networkNodes.filter(n => { const r = getNodeRisk(n); return r >= 55 && r < 75; });
+    const totalNodes = networkNodes.length;
+    const totalEdges = networkEdges.length;
+
+    let context = `SUPPLY CHAIN NETWORK OVERVIEW:\n`;
+    context += `- Total Nodes: ${totalNodes}\n- Total Edges (dependencies): ${totalEdges}\n`;
+    context += `- Critical Risk Nodes (≥75): ${criticalNodes.length}\n- High Risk Nodes (55-74): ${highNodes.length}\n`;
+    context += `- Active Disruption Events: ${activeEvents.length}\n\n`;
+
+    if (activeEvents.length > 0) {
+      context += `ACTIVE DISRUPTIONS:\n`;
+      activeEvents.forEach(e => { context += `- ${e.name} (${e.type}, ${e.severity}, Region: ${e.region})\n`; });
+      context += `\n`;
+    }
+
+    context += `CRITICAL NODES DETAIL:\n`;
+    criticalNodes.forEach(node => {
+      const vendor = scoredVendors.find(v => v.id === node.vendorId);
+      if (vendor) {
+        const deps = networkEdges.filter(e => e.from === node.id || e.to === node.id).length;
+        const downstream = networkEdges.filter(e => e.from === node.id).length;
+        context += `- ${vendor.vendorId} (${vendor.name}): Score ${vendor.riskScore}, Region: ${vendor.region}, Dependencies: ${deps}, Downstream: ${downstream}\n`;
+      }
+    });
+
+    context += `\nHIGH RISK NODES DETAIL:\n`;
+    highNodes.forEach(node => {
+      const vendor = scoredVendors.find(v => v.id === node.vendorId);
+      if (vendor) {
+        const deps = networkEdges.filter(e => e.from === node.id || e.to === node.id).length;
+        context += `- ${vendor.vendorId} (${vendor.name}): Score ${vendor.riskScore}, Region: ${vendor.region}, Dependencies: ${deps}\n`;
+      }
+    });
+
+    return context;
+  }, [scoredVendors, activeEvents]);
+
+  const handleExplain = useCallback(async () => {
+    setLlmLoading(true);
+    setLlmExplanation('');
+    const context = buildNetworkContext();
+    const question = 'Analyze the current supply chain network topology. Identify the most critical cascade risk paths — which nodes, if they fail, will cause the largest downstream disruption? Explain the propagation risk and recommend mitigation actions. Be specific with vendor IDs and risk scores.';
+    const answer = await askLLM(context, question);
+    setLlmExplanation(answer);
+    setLlmLoading(false);
+  }, [buildNetworkContext]);
+
   return (
     <div className="chain-reaction animate-fade-in">
       <div className="page-header">
@@ -38,10 +91,39 @@ export default function ChainReaction() {
           <p>Interactive dependency graph · Cascade analysis · Click nodes to trace risk paths</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
+          <button className="btn btn-primary btn-sm" onClick={handleExplain} disabled={llmLoading}>
+            {llmLoading ? '⏳ Analyzing...' : '🤖 AI Explain Network'}
+          </button>
           <button className="btn btn-ghost btn-sm" onClick={() => { setSelectedNode(null); setHoveredNode(null); }}>Reset View</button>
           {activeEvents.length > 0 && <span className="badge critical">⚡ {activeEvents.length} disruptions</span>}
         </div>
       </div>
+
+      {/* ── AI Explanation Panel ── */}
+      {(llmLoading || llmExplanation) && (
+        <div className="card" style={{ marginBottom: 'var(--space-4)', borderLeft: '3px solid var(--color-primary)' }}>
+          <div className="card-header">
+            <span className="card-title">🤖 AI Network Analysis</span>
+            <span className="badge info">Llama 3.1</span>
+          </div>
+          {llmLoading ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', padding: 'var(--space-3)', color: 'var(--text-tertiary)', fontSize: 'var(--text-sm)' }}>
+              <div className="ai-spinner" style={{ width: 18, height: 18, border: '2px solid var(--border-default)', borderTopColor: 'var(--color-primary)', borderRadius: '50%', animation: 'ai-spin 0.8s linear infinite', flexShrink: 0 }}></div>
+              <span>Analyzing supply chain topology and cascade risk paths...</span>
+            </div>
+          ) : (
+            <div
+              style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', lineHeight: 1.7, padding: '0 var(--space-2)' }}
+              dangerouslySetInnerHTML={{
+                __html: llmExplanation
+                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                  .replace(/\n/g, '<br/>')
+                  .replace(/• /g, '&bull; ')
+              }}
+            />
+          )}
+        </div>
+      )}
 
       <div className="cr-layout">
         <div className="card cr-canvas-card">

@@ -8,7 +8,6 @@ const navItems = [
   { path: '/vendor/1', label: 'Vendor Deep Dive', icon: '◉' },
   { path: '/weights', label: 'Weight Engine', icon: '⚖' },
   { path: '/events', label: 'Global Events', icon: '🌍' },
-  { path: '/simulation', label: 'Simulation Lab', icon: '◬' },
   { path: '/network', label: 'Risk Propagation', icon: '◍' },
   { path: '/assistant', label: 'Decision Assistant', icon: '◇' },
   { path: '/alerts', label: 'Alert Intelligence', icon: '◆' },
@@ -39,6 +38,8 @@ export default function Sidebar({ collapsed, onToggle }) {
             </div>
           )}
         </div>
+      </div>
+      <div className="sidebar-toggle-row">
         <button className="sidebar-toggle" onClick={onToggle} aria-label="Toggle sidebar">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
             {collapsed ? (

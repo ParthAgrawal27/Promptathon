@@ -44,8 +44,9 @@ export default function WeightEngine() {
             </span>
           </div>
 
-          {Object.entries(parameterConfig).map(([key, cfg]) => {
-            const val = weights[key] || 0;
+          {Object.entries(weights).map(([key, val]) => {
+            const cfg = parameterConfig[key];
+            if (!cfg) return null;
             return (
               <div key={key} className="we-slider-row">
                 <div className="we-slider-header">

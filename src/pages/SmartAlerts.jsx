@@ -1,110 +1,166 @@
+import { useState, useMemo } from 'react';
 import { useRiskEngine } from '../context/RiskEngine';
-import { useNavigate } from 'react-router-dom';
 import './SmartAlerts.css';
 
 export default function SmartAlerts() {
-  const { scoredVendors, activeEvents, weights, stats } = useRiskEngine();
-  const navigate = useNavigate();
+  const { scoredVendors, activeEvents, loading } = useRiskEngine();
+  const [filter, setFilter] = useState('all');
 
-  // Generate dynamic alerts from current state
-  const alerts = [];
-  // Event-based alerts
-  activeEvents.forEach(evt => {
-    const affected = scoredVendors.filter(v => evt.region === 'Global' || v.region === evt.region);
-    alerts.push({
-      id: `evt-${evt.id}`, severity: evt.severity, type: 'Event',
-      title: `${evt.name} — ${affected.length} vendors affected`,
-      desc: evt.desc,
-      impacts: Object.entries(evt.impacts).map(([p, m]) => `${p.replace(/_/g, ' ')}: ${m > 1 ? '+' : ''}${Math.round((m-1)*100)}%`),
-      vendors: affected.slice(0, 5).map(v => v.name),
-      action: 'Review in Global Events →',
-      actionPath: '/events',
+  // Generate alerts dynamically from scored vendor data
+  const alerts = useMemo(() => {
+    if (scoredVendors.length === 0) return [];
+    const generated = [];
+    let id = 1;
+
+    // Critical vendors
+    scoredVendors.filter(v => v.riskBand === 'Critical').slice(0, 10).forEach(v => {
+      generated.push({
+        id: id++, severity: 'critical', type: 'Risk Threshold',
+        title: `${v.name} exceeds critical risk threshold`,
+        description: `Risk score ${v.riskScore}/100 is above critical threshold (75). Immediate review recommended. Top risk factor: ${Object.entries(v.contributions).sort(([,a],[,b]) => b.contribution - a.contribution)[0]?.[0]?.replace(/_/g, ' ')}.`,
+        time: `${Math.floor(Math.random() * 12) + 1}h ago`,
+      });
     });
-  });
-  // Threshold breach alerts
-  scoredVendors.filter(v => v.riskBand === 'Critical').forEach(v => {
-    const topFactor = Object.entries(v.contributions).sort(([,a],[,b]) => b.contribution - a.contribution)[0];
-    alerts.push({
-      id: `crit-${v.id}`, severity: 'critical', type: 'Threshold',
-      title: `${v.name} — Critical risk (${v.riskScore}/100)`,
-      desc: `Weighted score exceeds critical threshold (75). Primary driver: ${topFactor[0].replace(/_/g,' ')} contributing ${topFactor[1].contribution.toFixed(1)} points.`,
-      impacts: [`Risk Score: ${v.riskScore}`, `Region: ${v.region}`, `Top factor: ${topFactor[0].replace(/_/g,' ')}`],
-      vendors: [v.name],
-      action: 'View Profile →',
-      actionPath: `/vendor/${v.id}`,
+
+    // High risk vendors with specific param alerts
+    scoredVendors.filter(v => v.riskBand === 'High').slice(0, 8).forEach(v => {
+      if (v.params.OnTime_Delivery < 65) {
+        generated.push({
+          id: id++, severity: 'high', type: 'Delivery',
+          title: `${v.name} — delivery rate below 65%`,
+          description: `On-time delivery at ${v.params.OnTime_Delivery.toFixed(1)}%. Supply continuity at risk.`,
+          time: `${Math.floor(Math.random() * 24) + 1}h ago`,
+        });
+      }
+      if (v.params.Financial_Stability < 55) {
+        generated.push({
+          id: id++, severity: 'high', type: 'Financial',
+          title: `${v.name} — financial stability concern`,
+          description: `Financial stability score ${v.params.Financial_Stability.toFixed(0)}/100 is below warning threshold. Monitor cash flow closely.`,
+          time: `${Math.floor(Math.random() * 24) + 1}h ago`,
+        });
+      }
     });
-  });
-  // Weight imbalance alert
-  const maxWeight = Math.max(...Object.values(weights));
-  if (maxWeight > 30) {
-    const param = Object.entries(weights).find(([,v]) => v === maxWeight);
-    alerts.push({
-      id: 'weight-imbalance', severity: 'moderate', type: 'Configuration',
-      title: `Weight imbalance detected — ${param[0].replace(/_/g,' ')} at ${maxWeight}%`,
-      desc: 'A single parameter has disproportionate influence on risk scoring. Consider rebalancing for more holistic assessment.',
-      impacts: [`${param[0].replace(/_/g,' ')}: ${maxWeight}%`],
-      vendors: [],
-      action: 'Configure Weights →',
-      actionPath: '/weights',
+
+    // Active event alerts
+    activeEvents.forEach(evt => {
+      generated.push({
+        id: id++, severity: evt.severity === 'critical' ? 'critical' : 'high', type: 'Disruption',
+        title: `Active Disruption: ${evt.name}`,
+        description: evt.desc,
+        time: 'Active now',
+      });
     });
+
+    // Moderate
+    scoredVendors.filter(v => v.params.Defect_Rate_PPM > 1800).slice(0, 5).forEach(v => {
+      generated.push({
+        id: id++, severity: 'moderate', type: 'Quality',
+        title: `${v.name} — elevated defect rate`,
+        description: `Defect rate at ${v.params.Defect_Rate_PPM.toFixed(0)} PPM. Exceeds 1800 PPM threshold.`,
+        time: `${Math.floor(Math.random() * 48) + 1}h ago`,
+      });
+    });
+
+    // Low
+    scoredVendors.filter(v => v.riskBand === 'Low').slice(0, 3).forEach(v => {
+      generated.push({
+        id: id++, severity: 'low', type: 'Info',
+        title: `${v.name} — performance within targets`,
+        description: `All parameters within acceptable thresholds. Risk score: ${v.riskScore}/100.`,
+        time: `${Math.floor(Math.random() * 72) + 1}h ago`,
+      });
+    });
+
+    return generated;
+  }, [scoredVendors, activeEvents]);
+
+  const filtered = filter === 'all' ? alerts : alerts.filter(a => a.severity === filter);
+  const critCount = alerts.filter(a => a.severity === 'critical').length;
+  const highCount = alerts.filter(a => a.severity === 'high').length;
+
+  if (loading) {
+    return (
+      <div className="smart-alerts animate-fade-in" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center', color: 'var(--text-tertiary)' }}>
+          <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>⏳</div>
+          <p>Loading alerts...</p>
+        </div>
+      </div>
+    );
   }
-
-  const sevOrder = { critical: 0, high: 1, moderate: 2 };
-  alerts.sort((a, b) => (sevOrder[a.severity] ?? 3) - (sevOrder[b.severity] ?? 3));
 
   return (
     <div className="smart-alerts animate-fade-in">
       <div className="page-header">
         <div>
-          <h1>Alert Intelligence</h1>
-          <p>Dynamic operational alerts · Threshold breaches · Event propagation · {alerts.length} active alerts</p>
+          <h1>Smart Alerts Center</h1>
+          <p>{alerts.length} active alerts · {critCount} critical requiring immediate action</p>
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-2)' }}>
-          <span className="badge critical">{alerts.filter(a => a.severity === 'critical').length} Critical</span>
-          <span className="badge moderate">{alerts.filter(a => a.severity === 'high' || a.severity === 'moderate').length} Advisory</span>
+          <button className="btn btn-ghost btn-sm">Mark All Read</button>
+          <button className="btn btn-danger btn-sm">Escalate Critical</button>
         </div>
       </div>
 
-      {alerts.length === 0 ? (
-        <div className="card" style={{ textAlign: 'center', padding: 'var(--space-8)' }}>
-          <p style={{ fontSize: 'var(--text-lg)', color: 'var(--color-success)', fontWeight: 700 }}>✅ All Clear</p>
-          <p style={{ color: 'var(--text-tertiary)' }}>No active alerts. All vendors within acceptable thresholds.</p>
+      {/* Summary Cards */}
+      <div className="grid-4" style={{ marginBottom: 'var(--space-4)' }}>
+        <div className="kpi-card danger">
+          <span className="kpi-label">Critical</span>
+          <span className="kpi-value" style={{ color: 'var(--color-danger)' }}>{critCount}</span>
+          <span className="kpi-trend down">Immediate action required</span>
         </div>
-      ) : (
-        <div className="sa-alerts-list">
-          {alerts.map(alert => (
-            <div key={alert.id} className={`card sa-alert-card severity-${alert.severity}`}>
-              <div className="sa-alert-header">
-                <span className={`sa-alert-icon ${alert.severity}`}>
-                  {alert.severity === 'critical' ? '🚨' : alert.severity === 'high' ? '⚠' : 'ℹ'}
-                </span>
-                <div className="sa-alert-title-area">
-                  <span className="sa-alert-title">{alert.title}</span>
-                  <div className="sa-alert-meta">
-                    <span className={`badge ${alert.severity}`}>{alert.severity}</span>
-                    <span className="badge info">{alert.type}</span>
-                  </div>
+        <div className="kpi-card warning">
+          <span className="kpi-label">High Priority</span>
+          <span className="kpi-value" style={{ color: '#F97316' }}>{highCount}</span>
+          <span className="kpi-trend neutral">Review within 24h</span>
+        </div>
+        <div className="kpi-card info">
+          <span className="kpi-label">Moderate</span>
+          <span className="kpi-value" style={{ color: 'var(--color-warning)' }}>{alerts.filter(a => a.severity === 'moderate').length}</span>
+          <span className="kpi-trend neutral">Monitoring</span>
+        </div>
+        <div className="kpi-card success">
+          <span className="kpi-label">Low/Info</span>
+          <span className="kpi-value" style={{ color: 'var(--color-success)' }}>{alerts.filter(a => a.severity === 'low').length}</span>
+          <span className="kpi-trend up">Under control</span>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="alert-filters">
+        {['all', 'critical', 'high', 'moderate', 'low'].map(f => (
+          <button key={f} className={`filter-pill ${filter === f ? 'active' : ''} ${f}`} onClick={() => setFilter(f)}>
+            {f === 'all' ? `All (${alerts.length})` : `${f.charAt(0).toUpperCase() + f.slice(1)} (${alerts.filter(a => a.severity === f).length})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Alert List */}
+      <div className="alerts-list">
+        {filtered.map((alert) => (
+          <div key={alert.id} className={`card alert-card-full ${alert.severity}`}>
+            <div className="alert-card-bar"></div>
+            <div className="alert-card-content">
+              <div className="alert-card-top">
+                <div className="alert-card-left">
+                  <span className={`badge ${alert.severity}`}>{alert.severity}</span>
+                  <span className="badge info">{alert.type}</span>
+                  <span className="alert-card-title">{alert.title}</span>
                 </div>
+                <span className="alert-card-time">{alert.time}</span>
               </div>
-              <p className="sa-alert-desc">{alert.desc}</p>
-              <div className="sa-alert-impacts">
-                {alert.impacts.map((impact, i) => (
-                  <span key={i} className="sa-impact-chip">{impact}</span>
-                ))}
+              <p className="alert-card-desc">{alert.description}</p>
+              <div className="alert-card-actions">
+                <button className="btn btn-ghost btn-sm">Acknowledge</button>
+                <button className="btn btn-ghost btn-sm">Assign</button>
+                <button className="btn btn-ghost btn-sm">View Vendor →</button>
+                {alert.severity === 'critical' && <button className="btn btn-danger btn-sm">Escalate</button>}
               </div>
-              {alert.vendors.length > 0 && (
-                <div className="sa-affected">
-                  <span className="sa-affected-label">Affected: </span>
-                  {alert.vendors.map((name, i) => <span key={i} className="sa-affected-vendor">{name}</span>)}
-                </div>
-              )}
-              <button className="btn btn-ghost btn-sm" onClick={() => navigate(alert.actionPath)} style={{ marginTop: 'var(--space-2)' }}>
-                {alert.action}
-              </button>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
