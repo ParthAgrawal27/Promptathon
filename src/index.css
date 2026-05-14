@@ -912,3 +912,150 @@ input:focus, select:focus, textarea:focus {
 [data-theme="dark"] .btn-ghost:hover { background: rgba(255,255,255,0.06); }
 [data-theme="dark"] .btn-danger { background: var(--color-danger); color: white; }
 
+/* ── AI Assistant Chat (dark) ─────────────────────────────────── */
+[data-theme="dark"] .chat-bubble {
+  background: #111827;
+  border-color: #334155;
+}
+[data-theme="dark"] .chat-msg.user .chat-bubble {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+[data-theme="dark"] .suggested-btn {
+  background: #1E293B;
+  border-color: #334155;
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .suggested-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+[data-theme="dark"] .chat-input {
+  background: #111827;
+  border-color: #334155;
+  color: var(--text-primary);
+}
+[data-theme="dark"] .chat-input:focus {
+  border-color: var(--border-active);
+  background: #0B1120;
+}
+[data-theme="dark"] .chat-vendor-selector {
+  background: #111827;
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .chat-vendor-selector select {
+  background: #1E293B;
+  border-color: #334155;
+  color: var(--text-primary);
+}
+[data-theme="dark"] .user-avatar-sm {
+  background: #334155;
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .quick-action-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.04);
+}
+
+/* ── VendorProfile AI Advisor (dark) ──────────────────────────── */
+[data-theme="dark"] .ai-advisor-card {
+  border-top-color: var(--color-primary);
+}
+[data-theme="dark"] .ai-advisor-card::before {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent);
+}
+[data-theme="dark"] .ai-quick-btn {
+  background: #1E293B;
+  border-color: #334155;
+  color: var(--text-secondary);
+}
+[data-theme="dark"] .ai-quick-btn:hover:not(:disabled) {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+[data-theme="dark"] .ai-input {
+  background: #111827;
+  border-color: #334155;
+  color: var(--text-primary);
+}
+[data-theme="dark"] .ai-input:focus {
+  border-color: var(--border-active);
+  background: #0B1120;
+}
+[data-theme="dark"] .ai-response-card {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(59, 130, 246, 0.18);
+}
+[data-theme="dark"] .ai-spinner {
+  border-color: #334155;
+  border-top-color: var(--color-primary);
+}
+
+/* ── VendorComparison AI Analysis (dark) ──────────────────────── */
+[data-theme="dark"] .comp-ai-response {
+  background: rgba(37, 99, 235, 0.06);
+  border-color: rgba(59, 130, 246, 0.18);
+}
+[data-theme="dark"] .comp-ai-spinner {
+  border-color: #334155;
+  border-top-color: var(--color-primary);
+}
+
+/* ── Search Dropdown (dark) ───────────────────────────────────── */
+[data-theme="dark"] .search-dropdown {
+  background: #1E293B;
+  border-color: #334155;
+}
+[data-theme="dark"] .search-dropdown-header {
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .search-result-item {
+  border-bottom-color: #334155;
+}
+[data-theme="dark"] .search-result-item:hover {
+  background: rgba(255,255,255,0.04);
+}
+[data-theme="dark"] .search-result-name {
+  color: var(--text-primary);
+}
+
+/* ── Events Banner (dark) ─────────────────────────────────────── */
+[data-theme="dark"] .events-banner {
+  background: rgba(220,38,38,0.08);
+  border-color: rgba(220,38,38,0.25);
+}
+[data-theme="dark"] .event-tag {
+  background: rgba(220,38,38,0.12);
+}
+
+/* ── Decision Tree (dark) ─────────────────────────────────────── */
+[data-theme="dark"] .dtree-node-content {
+  background: #111827;
+  border-color: #334155;
+}
+[data-theme="dark"] .dtree-leaf {
+  background: #111827;
+  border-color: #334155;
+}
+[data-theme="dark"] .dtree-leaf.triggered {
+  background: rgba(220,38,38,0.06);
+}
+
+/* ── VendorProfile Reasoning (dark) ───────────────────────────── */
+[data-theme="dark"] .vp-reason.critical {
+  background: rgba(220,38,38,0.08);
+}
+[data-theme="dark"] .vp-reason.high {
+  background: rgba(234,88,12,0.08);
+}
+[data-theme="dark"] .vp-reason.warning {
+  background: rgba(217,119,6,0.08);
+}
+[data-theme="dark"] .vp-reason.success {
+  background: rgba(5,150,105,0.08);
+}
+
+/* ── Weight Distribution bars (dark) ──────────────────────────── */
+[data-theme="dark"] .wb-bar-bg {
+  background: #111827;
+}
+
