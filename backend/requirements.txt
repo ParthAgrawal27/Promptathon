@@ -1,6 +1,4 @@
-# ═══════════════════════════════════════════════════════════════
-# VendorIQ Backend — Python Dependencies
-# ═══════════════════════════════════════════════════════════════
+# VendorIQ Backend - Python Dependencies
 
 # Core Framework
 fastapi==0.115.0
@@ -9,7 +7,6 @@ pydantic==2.9.2
 
 # Database
 sqlalchemy==2.0.35
-psycopg2-binary==2.9.9
 
 # Background Tasks
 apscheduler==3.10.4
@@ -20,7 +17,7 @@ aiohttp==3.10.5
 # Environment Variables
 python-dotenv==1.0.1
 
-# CORS & Security
+# CORS and Security
 python-multipart==0.0.9
 
 # WebSocket support (included in uvicorn[standard])
