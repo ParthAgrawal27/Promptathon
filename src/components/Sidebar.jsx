@@ -8,7 +8,6 @@ const navItems = [
   { path: '/vendor/1', label: 'Vendor Deep Dive', icon: '◉' },
   { path: '/weights', label: 'Weight Engine', icon: '⚖' },
   { path: '/events', label: 'Global Events', icon: '🌍' },
-  { path: '/simulation', label: 'Simulation Lab', icon: '◬' },
   { path: '/network', label: 'Risk Propagation', icon: '◍' },
   { path: '/assistant', label: 'Decision Assistant', icon: '◇' },
   { path: '/alerts', label: 'Alert Intelligence', icon: '◆' },

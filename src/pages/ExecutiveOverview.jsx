@@ -7,7 +7,14 @@ import './ExecutiveOverview.css';
 export default function ExecutiveOverview() {
   const { scoredVendors, stats, weights, activeEvents, activeProfile, applyProfile, loading } = useRiskEngine();
   const navigate = useNavigate();
-  const [treeExpanded, setTreeExpanded] = useState({ gpr: true, ops: true, fin: true });
+  const [treeExpanded, setTreeExpanded] = useState({ 
+    gpr: true, 
+    delivery: true, 
+    quality: true,
+    fin: true,
+    lead: true,
+    acc: true
+  });
 
   if (loading) {
     return (
@@ -104,7 +111,7 @@ export default function ExecutiveOverview() {
             <div className="dtree-node root">
               <div className="dtree-node-content">
                 <span className="dtree-label">Vendor Risk Assessment</span>
-                <span className="dtree-val" style={{ color: 'var(--color-danger)' }}>Score: {stats.avg}/100</span>
+                <span className="dtree-val" style={{ color: stats.avg >= 75 ? '#FF4D4F' : stats.avg >= 55 ? '#FF7A45' : stats.avg >= 35 ? '#FFC53D' : '#52C41A', fontWeight: 800, fontSize: 'var(--text-md)' }}>Score: {stats.avg}/100</span>
               </div>
             </div>
             <div className="dtree-branches">
@@ -114,41 +121,36 @@ export default function ExecutiveOverview() {
                   <div className="dtree-connector"></div>
                   <div className="dtree-node-content">
                     <span className="dtree-label">🌍 Geopolitical Risk</span>
-                    <span className="dtree-val">Weight: {gprWeight}%</span>
+                    <span className="dtree-val">Weight: {weights.GPR_Score || 0}%</span>
                     {hasGeoEvent && <span className="dtree-flag critical">⚡ EVENT ACTIVE</span>}
                   </div>
                 </button>
                 {treeExpanded.gpr && (
                   <div className="dtree-leaves">
-                    <div className={`dtree-leaf ${gprWeight > 20 ? 'triggered' : ''}`}>
+                    <div className={`dtree-leaf ${weights.GPR_Score > 20 ? 'triggered' : ''}`}>
                       <div className="dtree-connector-leaf"></div>
                       <span>IF GPR_Weight &gt; 20% → <strong>Escalate APAC vendors</strong></span>
-                      <span className={`dtree-status ${gprWeight > 20 ? 'yes' : 'no'}`}>{gprWeight > 20 ? 'TRUE' : 'FALSE'}</span>
+                      <span className={`dtree-status ${weights.GPR_Score > 20 ? 'yes' : 'no'}`}>{weights.GPR_Score > 20 ? 'TRUE' : 'FALSE'}</span>
                     </div>
                     <div className={`dtree-leaf ${hasGeoEvent ? 'triggered' : ''}`}>
                       <div className="dtree-connector-leaf"></div>
                       <span>IF Active_Event = WAR/MARITIME → <strong>+40% GPR multiplier</strong></span>
                       <span className={`dtree-status ${hasGeoEvent ? 'yes' : 'no'}`}>{hasGeoEvent ? 'TRUE' : 'FALSE'}</span>
                     </div>
-                    <div className={`dtree-leaf ${criticalCount >= 3 ? 'triggered' : ''}`}>
-                      <div className="dtree-connector-leaf"></div>
-                      <span>IF Critical_Vendors ≥ 3 → <strong>Activate crisis protocol</strong></span>
-                      <span className={`dtree-status ${criticalCount >= 3 ? 'yes' : 'no'}`}>{criticalCount >= 3 ? 'TRUE' : 'FALSE'}</span>
-                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Operations Branch */}
+              {/* Delivery Branch */}
               <div className="dtree-branch">
-                <button className="dtree-node branch" onClick={() => setTreeExpanded(p => ({ ...p, ops: !p.ops }))}>
+                <button className="dtree-node branch" onClick={() => setTreeExpanded(p => ({ ...p, delivery: !p.delivery }))}>
                   <div className="dtree-connector"></div>
                   <div className="dtree-node-content">
-                    <span className="dtree-label">📦 Operational Risk</span>
-                    <span className="dtree-val">Weight: {weights.OnTime_Delivery + weights.Avg_Lead_Time + weights.Shipment_Accuracy}%</span>
+                    <span className="dtree-label">⏱️ Delivery Risk</span>
+                    <span className="dtree-val">Weight: {weights.OnTime_Delivery || 0}%</span>
                   </div>
                 </button>
-                {treeExpanded.ops && (
+                {treeExpanded.delivery && (
                   <div className="dtree-leaves">
                     <div className={`dtree-leaf ${topVendor && topVendor.modifiedParams.OnTime_Delivery < 70 ? 'triggered' : ''}`}>
                       <div className="dtree-connector-leaf"></div>
@@ -157,11 +159,26 @@ export default function ExecutiveOverview() {
                         {topVendor && topVendor.modifiedParams.OnTime_Delivery < 70 ? 'TRUE' : 'FALSE'}
                       </span>
                     </div>
-                    <div className={`dtree-leaf ${topVendor && topVendor.modifiedParams.Avg_Lead_Time > 20 ? 'triggered' : ''}`}>
+                  </div>
+                )}
+              </div>
+
+              {/* Quality Branch */}
+              <div className="dtree-branch">
+                <button className="dtree-node branch" onClick={() => setTreeExpanded(p => ({ ...p, quality: !p.quality }))}>
+                  <div className="dtree-connector"></div>
+                  <div className="dtree-node-content">
+                    <span className="dtree-label">🔬 Quality Risk</span>
+                    <span className="dtree-val">Weight: {weights.Defect_Rate_PPM || 0}%</span>
+                  </div>
+                </button>
+                {treeExpanded.quality && (
+                  <div className="dtree-leaves">
+                    <div className={`dtree-leaf ${topVendor && topVendor.modifiedParams.Defect_Rate_PPM > 1500 ? 'triggered' : ''}`}>
                       <div className="dtree-connector-leaf"></div>
-                      <span>IF Avg_Lead_Time &gt; 20 days → <strong>Escalate lead time</strong></span>
-                      <span className={`dtree-status ${topVendor && topVendor.modifiedParams.Avg_Lead_Time > 20 ? 'yes' : 'no'}`}>
-                        {topVendor && topVendor.modifiedParams.Avg_Lead_Time > 20 ? 'TRUE' : 'FALSE'}
+                      <span>IF Defect_Rate_PPM &gt; 1500 → <strong>Operational risk escalation</strong></span>
+                      <span className={`dtree-status ${topVendor && topVendor.modifiedParams.Defect_Rate_PPM > 1500 ? 'yes' : 'no'}`}>
+                        {topVendor && topVendor.modifiedParams.Defect_Rate_PPM > 1500 ? 'TRUE' : 'FALSE'}
                       </span>
                     </div>
                   </div>
@@ -174,7 +191,7 @@ export default function ExecutiveOverview() {
                   <div className="dtree-connector"></div>
                   <div className="dtree-node-content">
                     <span className="dtree-label">💰 Financial Risk</span>
-                    <span className="dtree-val">Weight: {weights.Financial_Stability}%</span>
+                    <span className="dtree-val">Weight: {weights.Financial_Stability || 0}%</span>
                   </div>
                 </button>
                 {treeExpanded.fin && (
@@ -184,6 +201,50 @@ export default function ExecutiveOverview() {
                       <span>IF Financial_Stability &lt; 50 → <strong>Financial distress alert</strong></span>
                       <span className={`dtree-status ${topVendor && topVendor.modifiedParams.Financial_Stability < 50 ? 'yes' : 'no'}`}>
                         {topVendor && topVendor.modifiedParams.Financial_Stability < 50 ? 'TRUE' : 'FALSE'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Logistics Speed Branch */}
+              <div className="dtree-branch">
+                <button className="dtree-node branch" onClick={() => setTreeExpanded(p => ({ ...p, lead: !p.lead }))}>
+                  <div className="dtree-connector"></div>
+                  <div className="dtree-node-content">
+                    <span className="dtree-label">⏳ Logistics Speed</span>
+                    <span className="dtree-val">Weight: {weights.Avg_Lead_Time || 0}%</span>
+                  </div>
+                </button>
+                {treeExpanded.lead && (
+                  <div className="dtree-leaves">
+                    <div className={`dtree-leaf ${topVendor && topVendor.modifiedParams.Avg_Lead_Time > 20 ? 'triggered' : ''}`}>
+                      <div className="dtree-connector-leaf"></div>
+                      <span>IF Avg_Lead_Time &gt; 20 days → <strong>Logistics bottleneck</strong></span>
+                      <span className={`dtree-status ${topVendor && topVendor.modifiedParams.Avg_Lead_Time > 20 ? 'yes' : 'no'}`}>
+                        {topVendor && topVendor.modifiedParams.Avg_Lead_Time > 20 ? 'TRUE' : 'FALSE'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Shipment Accuracy Branch */}
+              <div className="dtree-branch">
+                <button className="dtree-node branch" onClick={() => setTreeExpanded(p => ({ ...p, acc: !p.acc }))}>
+                  <div className="dtree-connector"></div>
+                  <div className="dtree-node-content">
+                    <span className="dtree-label">🎯 Shipment Accuracy</span>
+                    <span className="dtree-val">Weight: {weights.Shipment_Accuracy || 0}%</span>
+                  </div>
+                </button>
+                {treeExpanded.acc && (
+                  <div className="dtree-leaves">
+                    <div className={`dtree-leaf ${topVendor && topVendor.modifiedParams.Shipment_Accuracy < 80 ? 'triggered' : ''}`}>
+                      <div className="dtree-connector-leaf"></div>
+                      <span>IF Shipment_Accuracy &lt; 80% → <strong>Logistics instability</strong></span>
+                      <span className={`dtree-status ${topVendor && topVendor.modifiedParams.Shipment_Accuracy < 80 ? 'yes' : 'no'}`}>
+                        {topVendor && topVendor.modifiedParams.Shipment_Accuracy < 80 ? 'TRUE' : 'FALSE'}
                       </span>
                     </div>
                   </div>

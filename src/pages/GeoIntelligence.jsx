@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useRiskEngine } from '../context/RiskEngine';
 import { regionConfig } from '../data/mockData';
 import './GeoIntelligence.css';
 
 export default function GeoIntelligence() {
   const { scoredVendors, activeEvents } = useRiskEngine();
+  const [expandedRegion, setExpandedRegion] = useState(null);
 
   const regions = {};
   scoredVendors.forEach(v => {
@@ -15,6 +17,10 @@ export default function GeoIntelligence() {
   // Vendor map dots (simple SVG world projection)
   const projectLat = (lat) => (90 - lat) * (400 / 180);
   const projectLng = (lng) => (lng + 180) * (800 / 360);
+
+  const toggleRegion = (region) => {
+    setExpandedRegion(expandedRegion === region ? null : region);
+  };
 
   return (
     <div className="geo-intel animate-fade-in">
@@ -33,7 +39,6 @@ export default function GeoIntelligence() {
       <div className="card geo-map-card">
         <svg viewBox="0 0 800 400" className="geo-svg">
           <rect width="800" height="400" fill="#0F172A" rx="8" />
-          {/* World Map Background */}
           <image 
             href="https://upload.wikimedia.org/wikipedia/commons/8/80/World_map_-_low_resolution.svg" 
             x="0" y="0" width="800" height="400" 
@@ -41,7 +46,6 @@ export default function GeoIntelligence() {
             preserveAspectRatio="none"
             style={{ filter: 'invert(1) opacity(0.8) drop-shadow(0px 0px 2px rgba(255,255,255,0.2))' }}
           />
-          {/* Active event zones */}
           {activeEvents.map((evt, i) => {
             const regionVendors = scoredVendors.filter(v => evt.region === 'Global' || v.region === evt.region);
             if (regionVendors.length === 0) return null;
@@ -57,7 +61,6 @@ export default function GeoIntelligence() {
               </g>
             );
           })}
-          {/* Vendor dots */}
           {scoredVendors.map(v => {
             const x = projectLng(v.lng);
             const y = projectLat(v.lat);
@@ -72,7 +75,6 @@ export default function GeoIntelligence() {
               </g>
             );
           })}
-          {/* Legend */}
           <g transform="translate(20, 340)">
             {[{ c: '#DC2626', l: 'Critical' }, { c: '#EA580C', l: 'High' }, { c: '#D97706', l: 'Moderate' }, { c: '#059669', l: 'Low' }].map((item, i) => (
               <g key={item.l} transform={`translate(${i * 90}, 0)`}>
@@ -84,34 +86,65 @@ export default function GeoIntelligence() {
         </svg>
       </div>
 
-      {/* ── Regional Breakdown ── */}
+      {/* ── Regional Breakdown with Dropdowns ── */}
       <div className="geo-regions-grid">
         {Object.entries(regions).sort(([, a], [, b]) => (b.totalRisk / b.vendors.length) - (a.totalRisk / a.vendors.length)).map(([region, data]) => {
           const avg = Math.round(data.totalRisk / data.vendors.length);
           const cfg = regionConfig[region] || { color: '#6366F1', abbr: '??' };
           const critical = data.vendors.filter(v => v.riskBand === 'Critical').length;
+          const high = data.vendors.filter(v => v.riskBand === 'High').length;
+          const moderate = data.vendors.filter(v => v.riskBand === 'Moderate').length;
+          const low = data.vendors.filter(v => v.riskBand === 'Low').length;
+          const isExpanded = expandedRegion === region;
+          const regionEvents = activeEvents.filter(e => e.region === 'Global' || e.region === region);
           return (
-            <div key={region} className="card geo-region-card">
-              <div className="geo-region-header">
+            <div key={region} className="card geo-region-card" style={{ cursor: 'pointer' }}>
+              <div className="geo-region-header" onClick={() => toggleRegion(region)}>
                 <span className="geo-region-abbr" style={{ background: cfg.color + '18', color: cfg.color }}>{cfg.abbr}</span>
                 <div className="geo-region-info">
                   <span className="geo-region-name">{region}</span>
                   <span className="geo-region-count">{data.vendors.length} vendors</span>
                 </div>
                 <span className="geo-region-score font-mono" style={{ color: avg >= 55 ? 'var(--color-danger)' : 'var(--text-primary)' }}>{avg}</span>
+                <span style={{ fontSize: 'var(--text-sm)', color: 'var(--text-tertiary)', marginLeft: 'var(--space-2)', transition: 'transform 0.2s', transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
               </div>
               <div className="progress-bar" style={{ marginTop: 'var(--space-2)' }}>
                 <div className="fill" style={{ width: `${avg}%`, background: cfg.color }}></div>
               </div>
               {critical > 0 && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-danger)', marginTop: 'var(--space-1)', display: 'block' }}>⚠ {critical} critical vendor{critical > 1 ? 's' : ''}</span>}
-              <div className="geo-region-vendors">
-                {data.vendors.map(v => (
-                  <div key={v.id} className="geo-rv">
-                    <span className="geo-rv-name">{v.name}</span>
-                    <span className="geo-rv-score font-mono" style={{ color: v.riskColor }}>{v.riskScore}</span>
+
+              {isExpanded && (
+                <div style={{ marginTop: 'var(--space-3)', animation: 'fade-in 0.3s ease-out' }}>
+                  {/* Risk Distribution */}
+                  <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-3)', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'rgba(220,38,38,0.1)', color: '#DC2626', fontWeight: 600 }}>Critical: {critical}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'rgba(234,88,12,0.1)', color: '#EA580C', fontWeight: 600 }}>High: {high}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'rgba(217,119,6,0.1)', color: '#D97706', fontWeight: 600 }}>Moderate: {moderate}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: 'rgba(5,150,105,0.1)', color: '#059669', fontWeight: 600 }}>Low: {low}</span>
                   </div>
-                ))}
-              </div>
+
+                  {/* Active events in this region */}
+                  {regionEvents.length > 0 && (
+                    <div style={{ marginBottom: 'var(--space-3)', padding: 'var(--space-2)', background: 'rgba(220,38,38,0.05)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(220,38,38,0.15)' }}>
+                      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 600, color: 'var(--color-danger)' }}>⚡ Active Disruptions:</span>
+                      {regionEvents.map(e => (
+                        <div key={e.id} style={{ fontSize: 'var(--text-xs)', color: 'var(--text-secondary)', marginTop: 2 }}>{e.icon} {e.name} ({e.severity})</div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Vendor list */}
+                  <div className="geo-region-vendors">
+                    {data.vendors.sort((a, b) => b.riskScore - a.riskScore).map(v => (
+                      <div key={v.id} className="geo-rv">
+                        <span className="geo-rv-name">{v.name}</span>
+                        <span className={`badge ${v.riskBand.toLowerCase()}`} style={{ fontSize: '9px' }}>{v.riskBand}</span>
+                        <span className="geo-rv-score font-mono" style={{ color: v.riskColor }}>{v.riskScore}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
